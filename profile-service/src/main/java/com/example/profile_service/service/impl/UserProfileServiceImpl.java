@@ -33,7 +33,6 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public List<UserProfileResponse> getAllProfile(){
         List<UserProfile> userProfiles = userProfileRepository.findAll();
-
         return userProfileMapper.toUserProfilesResponse(userProfiles);
     }
 

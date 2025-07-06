@@ -14,3 +14,8 @@ spring:
               uri: http://localhost:8080
               predicates:
                 - Path=/api/identity/**
+
+            - id: profile-service
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/profile/**
