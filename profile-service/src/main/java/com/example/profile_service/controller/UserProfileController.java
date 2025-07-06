@@ -35,4 +35,19 @@ public class UserProfileController {
                 .result(userProfileService.getAllProfile())
                 .build();
     }
+
+    @GetMapping("/{username}")
+    public ApiResponse<UserProfileResponse> getUserProfile(@PathVariable String username){
+        return ApiResponse.<UserProfileResponse>builder()
+                .result(userProfileService.getUserProfileByUsername(username))
+                .build();
+    }
+
+    @DeleteMapping("/{username}")
+    public ApiResponse<String> deleteUserProfile(@PathVariable String username){
+        userProfileService.deleteUserProfile(username);
+        return ApiResponse.<String>builder()
+                .result("deleted")
+                .build();
+    }
 }
