@@ -12,6 +12,8 @@
         <option value="$PROJECT_DIR$/identity-service/pom.xml" />
         <option value="$PROJECT_DIR$/profile-service/pom.xml" />
         <option value="$PROJECT_DIR$/api-gateway/pom.xml" />
+        <option value="$PROJECT_DIR$/question-service/pom.xml" />
+        <option value="$PROJECT_DIR$/assignment-service/pom.xml" />
         <option value="$PROJECT_DIR$/chat-service/pom.xml" />
       </list>
     </option>
