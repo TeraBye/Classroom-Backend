@@ -29,7 +29,7 @@ public class UserController {
     UserService userService;
     UserMapper userMapper;
 
-    @PostMapping
+    @PostMapping("/registration")
     public ApiResponse<UserProfileResponse> createUser(@RequestBody @Valid UserRequestDTO userRequestDTO) {
         return ApiResponse.<UserProfileResponse>builder()
                 .result(userService.createUser(userRequestDTO))
@@ -67,8 +67,8 @@ public class UserController {
     }
 
     @GetMapping("/myInfo")
-    public ApiResponse<UserResponse> getMyInfo() {
-        return ApiResponse.<UserResponse>builder()
+    public ApiResponse<UserProfileResponse> getMyInfo() {
+        return ApiResponse.<UserProfileResponse>builder()
                 .result(userService.getInfoUserIndex())
                 .build();
     }
