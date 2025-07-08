@@ -3,7 +3,6 @@ package com.example.profile_service.controller;
 import com.example.profile_service.dto.request.UserProfileCreationRequest;
 import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.dto.response.UserProfileResponse;
-import com.example.profile_service.entity.UserProfile;
 import com.example.profile_service.service.UserProfileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
