@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,10 +22,13 @@ import java.util.Optional;
 public class AssignmentServiceImpl implements AssignmentService {
     AssignmentRepository assignmentRepository;
     AssignmentMapper assignmentMapper;
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd:MM:yyyy");
+
     @Override
     public AssignmentResponse createAssignment(AssignmentCreateRequest request) {
+        String formatted = request.getDeadline().format(formatter);
         Assignment assignment = assignmentMapper.toAssignment(request);
-        assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline().toString());
+        assignment.setAssignmentCode(request.getUsername() + "_assignment_" + formatted);
         assignment = assignmentRepository.save(assignment);
         return assignmentMapper.toAssignmentResponse(assignment);
     }
@@ -43,13 +47,15 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     @Override
     public AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request) {
+        String formatted = request.getDeadline().format(formatter);
         Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignmentId);
         Assignment assignment = null;
         if (assignmentOptional.isPresent()) {
             assignment = assignmentOptional.get();
         }
-        if (assignment.getDeadline() != request.getDeadline() || !assignment.getUsername().equals(request.getUsername())) {
-            assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline().toString());
+        if (!assignment.getDeadline().equals(request.getDeadline()) ||
+                !assignment.getUsername().equals(request.getUsername())) {
+            assignment.setAssignmentCode(request.getUsername() + "_assignment_" + formatted);
         }
         assignmentMapper.updateAssignment(assignment, request);
         return assignmentMapper.toAssignmentResponse(assignment);

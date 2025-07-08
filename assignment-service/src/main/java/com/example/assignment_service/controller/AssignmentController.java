@@ -19,7 +19,7 @@ import java.util.List;
 @Tag(name = "Assignment Controller")
 public class AssignmentController {
     AssignmentService assignmentService;
-    @PostMapping
+    @PostMapping("/create")
     public ApiResponse<AssignmentResponse> createAssignment(@RequestBody AssignmentCreateRequest request) {
         return ApiResponse.<AssignmentResponse>builder()
                 .result(assignmentService.createAssignment(request))

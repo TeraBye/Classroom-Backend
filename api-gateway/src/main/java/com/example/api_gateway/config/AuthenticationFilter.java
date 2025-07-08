@@ -38,7 +38,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     @NonFinal
     private String [] publicEnpoints = {
-            "/api/identity/auth/.*", "/api/identity/users/registration", "/api/assignments/.*"
+            "/api/identity/auth/.*", "/api/identity/users/registration"
     };
 
     @Override
