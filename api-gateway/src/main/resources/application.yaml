@@ -20,6 +20,11 @@ spring:
               predicates:
                 - Path=/api/profile/**
 
+            - id: chat-service
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/chat/**
+
             - id: assignment-service
               uri: http://localhost:8083
               predicates:

@@ -1,5 +1,6 @@
 package com.example.profile_service.controller;
 
+import com.example.profile_service.dto.request.ListUsernameRequest;
 import com.example.profile_service.dto.request.UserProfileCreationRequest;
 import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.dto.response.UserProfileResponse;
@@ -47,6 +48,15 @@ public class UserProfileController {
         userProfileService.deleteUserProfile(username);
         return ApiResponse.<String>builder()
                 .result("deleted")
+                .build();
+    }
+
+    @PostMapping("/getListUserByListUsername")
+    public ApiResponse<List<UserProfileResponse>> getListUserByListUsername(
+            @RequestBody ListUsernameRequest usernames
+            ){
+        return ApiResponse.<List<UserProfileResponse>>builder()
+                .result(userProfileService.getUserProfileByListUsername(usernames.getListUsername()))
                 .build();
     }
 }
