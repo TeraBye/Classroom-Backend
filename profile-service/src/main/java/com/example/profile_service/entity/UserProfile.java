@@ -32,4 +32,6 @@ public class UserProfile {
     private String email;
 
     private LocalDate dob;
+
+    private String avatar;
 }

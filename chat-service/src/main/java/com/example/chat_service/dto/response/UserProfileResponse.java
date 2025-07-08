@@ -1,10 +1,9 @@
-package com.example.profile_service.dto.response;
+package com.example.chat_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.neo4j.core.schema.Property;
 
 import java.time.LocalDate;
 

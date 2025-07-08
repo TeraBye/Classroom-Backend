@@ -25,6 +25,8 @@ public class UserProfileServiceImpl implements UserProfileService {
     @Override
     public UserProfileResponse createUserProfile(UserProfileCreationRequest request){
         UserProfile userProfile = userProfileMapper.toUserProfile(request);
+        userProfile
+                .setAvatar("https://i.pinimg.com/736x/6e/59/95/6e599501252c23bcf02658617b29c894.jpg");
         userProfile = userProfileRepository.save(userProfile);
 
         return userProfileMapper.toUserProfileResponse(userProfile);
@@ -50,5 +52,12 @@ public class UserProfileServiceImpl implements UserProfileService {
                 .orElseThrow(() -> new RuntimeException("UserProfile not found with username: " + username));
 
         userProfileRepository.delete(userProfile);
+    }
+
+    @Override
+    public List<UserProfileResponse> getUserProfileByListUsername(
+            List<String> usernames) {
+        return userProfileMapper.toUserProfilesResponse(
+                userProfileRepository.findAllByUsernames(usernames));
     }
 }
