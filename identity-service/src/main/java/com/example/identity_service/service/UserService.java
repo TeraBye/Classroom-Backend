@@ -19,6 +19,6 @@ public interface UserService {
 
     void deleteUser(int userId);
 
-    UserResponse getInfoUserIndex();
+    UserProfileResponse getInfoUserIndex();
 }
 ;
