@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface ChatService {
     ChatResponse createChat(ChatCreationRequest request);
-    List<ChatResponse> getChats(Long  conversationId);
+    List<ChatResponse> getChats(Long conversationId, int page, int size);
 }
