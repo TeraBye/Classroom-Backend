@@ -12,7 +12,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -24,6 +28,7 @@ public class ChatServiceImpl implements ChatService {
     ChatRepository chatRepository;
     ConversationRepository conversationRepository;
     ChatMapper chatMapper;
+    SimpMessagingTemplate messagingTemplate;
 
     @Override
     public ChatResponse createChat(ChatCreationRequest request){
@@ -32,13 +37,23 @@ public class ChatServiceImpl implements ChatService {
         Chat chat = chatMapper.toChat(request);
         chat.setConversation(conversation);
 
-        return chatMapper.toChatResponse(chatRepository.save(chat));
+        ChatResponse chatResponse = chatMapper.toChatResponse(chatRepository.save(chat));
+
+        messagingTemplate.convertAndSend(
+                "/topic/conversations/" + conversation.getId(),
+                chatResponse
+        );
+
+        return chatResponse;
 
     }
 
     @Override
-    public List<ChatResponse> getChats(Long  conversationId){
+    public List<ChatResponse> getChats(Long conversationId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         return chatMapper.toChatResponseList(
-                chatRepository.findByConversation_Id(conversationId));
+                chatRepository.findByConversation_IdOrderByTimeDesc(conversationId, pageable)
+        );
     }
+
 }

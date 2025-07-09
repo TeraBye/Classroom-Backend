@@ -28,10 +28,13 @@ public class ChatController {
 
     @GetMapping("/{conversationId}")
     public ApiResponse<List<ChatResponse>> getChat(
-            @PathVariable Long conversationId
-    ){
+            @PathVariable Long conversationId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
         return ApiResponse.<List<ChatResponse>>builder()
-                .result(chatService.getChats(conversationId))
+                .result(chatService.getChats(conversationId, page, size))
                 .build();
     }
+
 }
