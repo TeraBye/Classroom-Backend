@@ -13,9 +13,9 @@
 	</parent>
 
 	<groupId>com.example</groupId>
-	<artifactId>assignment-service</artifactId>
+	<artifactId>classroom-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>assignment-service</name>
+	<name>classroom-service</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
@@ -187,10 +187,10 @@
 				</executions>
 				<configuration>
 					<excludes>
-						<exclude>com/devteria/assignmentservice/dto/**</exclude>
-						<exclude>com/devteria/assignmentservice/entity/**</exclude>
-						<exclude>com/devteria/assignmentservice/mapper/**</exclude>
-						<exclude>com/devteria/assignmentservice/configuration/**</exclude>
+						<exclude>com/devteria/classroomservice/dto/**</exclude>
+						<exclude>com/devteria/classroomservice/entity/**</exclude>
+						<exclude>com/devteria/classroomservice/mapper/**</exclude>
+						<exclude>com/devteria/classroomservice/configuration/**</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
