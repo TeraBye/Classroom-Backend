@@ -23,4 +23,6 @@ public class UserProfileResponse {
     private String email;
 
     private LocalDate dob;
+
+    private String avatar;
 }
