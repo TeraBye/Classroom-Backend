@@ -1,0 +1,19 @@
+server:
+  port: 8085
+  servlet:
+    context-path: /api/searches
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/search_service"
+    username: root
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+app:
+  services:
+    profile: http://localhost:8081/api/profile
+    classroom: http://localhost:8084/api/classrooms

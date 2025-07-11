@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -57,6 +58,16 @@ public class UserProfileController {
             ){
         return ApiResponse.<List<UserProfileResponse>>builder()
                 .result(userProfileService.getUserProfileByListUsername(usernames.getListUsername()))
+                .build();
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<Page<UserProfileResponse>> searchUsers(
+            @RequestParam("q") String q,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        return ApiResponse.<Page<UserProfileResponse>>builder()
+                .result(userProfileService.searchUsers(q, page, size))
                 .build();
     }
 }

@@ -58,6 +58,7 @@ public class AssignmentServiceImpl implements AssignmentService {
             assignment.setAssignmentCode(request.getUsername() + "_assignment_" + formatted);
         }
         assignmentMapper.updateAssignment(assignment, request);
+        assignmentRepository.save(assignment);
         return assignmentMapper.toAssignmentResponse(assignment);
     }
 
