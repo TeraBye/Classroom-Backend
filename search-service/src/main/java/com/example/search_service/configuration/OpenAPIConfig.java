@@ -1,4 +1,4 @@
-package com.example.classroom_service.configuration;
+package com.example.search_service.configuration;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -11,14 +11,14 @@ public class OpenAPIConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI().info(new Info().title("Assignment service document").version("v1.0.0")
-                .description("Test API for Assignment service"));
+                .description("Test API for Search service"));
     }
 
     @Bean
     public GroupedOpenApi groupedOpenApi() {
         return GroupedOpenApi.builder()
                 .group("api-service")
-                .packagesToScan("com.example.classroom_service.controller")
+                .packagesToScan("com.example.search_service.controller")
                 .build();
     }
 }
