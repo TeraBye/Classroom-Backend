@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import com.example.identity_service.dto.request.ProfileCreationRequest;
+import com.example.identity_service.dto.response.ProfileClientResponse;
 import com.example.identity_service.dto.response.UserProfileResponse;
 import com.example.identity_service.mapper.ProfileMapper;
 import com.example.identity_service.repository.httpclient.ProfileClient;
@@ -93,9 +94,16 @@ public class UserServiceImpl implements UserService {
     public UserProfileResponse getInfoUserIndex() {
         var context = SecurityContextHolder.getContext();
         String username = context.getAuthentication().getName();
-//        User user = userRepository.findByUsername(name)
-//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        ProfileClientResponse response = profileClient.getUserProfileByUsername(username)
+                .getResult();
 
-        return profileClient.getUserProfileByUsername(username).getResult();
+        UserProfileResponse userProfileResponse
+                = profileMapper.toUserProfileResponse(response);
+
+        userProfileResponse.setRole(user.getRoles());
+
+        return userProfileResponse;
     }
 }
