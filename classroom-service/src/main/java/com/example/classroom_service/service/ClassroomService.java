@@ -14,4 +14,5 @@ public interface ClassroomService {
     ClassroomResponse updateClassroom(int classroomId, ClassroomUpdateRequest request);
     void deleteClassroom(int classroomId);
     Page<ClassroomResponse> searchClassrooms(String q, int page, int size);
+    Page<ClassroomResponse> findClassroomsByTeacherUsername(String username, int page, int size);
 }
