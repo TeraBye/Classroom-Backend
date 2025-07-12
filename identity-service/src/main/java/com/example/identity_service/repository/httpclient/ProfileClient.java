@@ -2,6 +2,7 @@ package com.example.identity_service.repository.httpclient;
 
 import com.example.identity_service.dto.request.ProfileCreationRequest;
 import com.example.identity_service.dto.response.ApiResponse;
+import com.example.identity_service.dto.response.ProfileClientResponse;
 import com.example.identity_service.dto.response.UserProfileResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -17,7 +18,7 @@ public interface ProfileClient {
             @RequestBody ProfileCreationRequest request);
 
     @GetMapping(value = "/users/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
-    ApiResponse<UserProfileResponse> getUserProfileByUsername(
+    ApiResponse<ProfileClientResponse> getUserProfileByUsername(
             @PathVariable("username") String username);
 
 }
