@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class UserProfileResponse {
+public class ProfileClientResponse {
     private String id;
 
     private int userId;
@@ -25,6 +25,4 @@ public class UserProfileResponse {
     private LocalDate dob;
 
     private String avatar;
-
-    private String role;
 }
