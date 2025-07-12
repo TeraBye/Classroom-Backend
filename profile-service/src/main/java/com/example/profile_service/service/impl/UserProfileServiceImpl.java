@@ -10,6 +10,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -59,5 +62,12 @@ public class UserProfileServiceImpl implements UserProfileService {
             List<String> usernames) {
         return userProfileMapper.toUserProfilesResponse(
                 userProfileRepository.findAllByUsernames(usernames));
+    }
+
+    @Override
+    public Page<UserProfileResponse> searchUsers(String q, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserProfile> userProfiles = userProfileRepository.searchUsers(q, pageable);
+        return userProfiles.map(userProfileMapper::toUserProfileResponse);
     }
 }
