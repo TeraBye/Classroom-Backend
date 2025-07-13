@@ -12,6 +12,9 @@ import com.example.classroom_service.service.ClassroomDetailService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -41,7 +44,7 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
                 .joinedAt(LocalDateTime.now())
                 .build();
 
-        return classroomDetailMapper.toAddStudentResponse(classroomDetailRepository.save(classroomDetail));
+        return classroomDetailMapper.toStudentResponse(classroomDetailRepository.save(classroomDetail));
     }
 
     @Override
@@ -54,5 +57,12 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
                 .orElseThrow(() -> new RuntimeException("Student with username " + request.getStudentUsername() + " is not enrolled in the classroom."));
 
         classroomDetailRepository.delete(classroomDetail);
+    }
+
+    @Override
+    public Page<StudentResponse> findStudentClasses(String studentUsername, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ClassroomDetail> classroomDetails = classroomDetailRepository.findByStudentUsername(studentUsername, pageable);
+        return classroomDetails.map(classroomDetailMapper::toStudentResponse);
     }
 }

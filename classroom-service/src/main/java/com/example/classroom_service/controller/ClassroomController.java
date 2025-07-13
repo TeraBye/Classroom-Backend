@@ -96,4 +96,15 @@ public class ClassroomController {
                 .result(classroomService.findClassroomsByTeacherUsername(username, page, size))
                 .build();
     }
+
+    @GetMapping("/student/{username}")
+    public ApiResponse<Page<StudentResponse>> findStudentClasses(
+            @PathVariable String username,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        return ApiResponse.<Page<StudentResponse>>builder()
+                .result(classroomDetailService.findStudentClasses(username,page,size))
+                .build();
+    }
 }
