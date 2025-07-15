@@ -2,6 +2,8 @@ package com.example.identity_service.controller;
 
 import java.text.ParseException;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,6 +52,21 @@ public class AuthController {
     @PostMapping("/refresh")
     ApiResponse<AuthResponse> refreshToken(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
         var result = authService.refreshToken(request);
+        return ApiResponse.<AuthResponse>builder().result(result).build();
+    }
+
+    @PostMapping("/admin-login")
+    ApiResponse<AuthResponse> loginByAdmin(@RequestBody AuthRequest authRequest, HttpServletResponse response){
+        var result = authService.authenticate(authRequest);
+        result.setToken("");
+        String token = result.getToken();
+        Cookie cookie = new Cookie("token",token);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 60 * 60); // 7 ngày
+        cookie.setAttribute("SameSite", "Strict"); // hoặc "Lax", "None" (None nếu dùng cross-origin)
+
+        response.addCookie(cookie);
         return ApiResponse.<AuthResponse>builder().result(result).build();
     }
 }

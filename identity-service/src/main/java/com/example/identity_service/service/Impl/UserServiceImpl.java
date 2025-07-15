@@ -1,13 +1,20 @@
 package com.example.identity_service.service.Impl;
 
+import java.awt.print.Pageable;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.example.identity_service.dto.request.ListUsernameRequest;
 import com.example.identity_service.dto.request.ProfileCreationRequest;
 import com.example.identity_service.dto.response.ProfileClientResponse;
+import com.example.identity_service.dto.response.UserPagingResponse;
 import com.example.identity_service.dto.response.UserProfileResponse;
 import com.example.identity_service.mapper.ProfileMapper;
 import com.example.identity_service.repository.httpclient.ProfileClient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -105,5 +112,34 @@ public class UserServiceImpl implements UserService {
         userProfileResponse.setRole(user.getRoles());
 
         return userProfileResponse;
+    }
+
+    @Override
+    public UserPagingResponse<UserResponse> getPageUsersProfile(int cursor, Pageable pageable) {
+        List<User> users = userRepository.findNextPage(cursor, pageable);
+        List<String> listUsername = users.stream()
+                .map(User::getUsername).toList();
+        ListUsernameRequest listUsernameRequest = new ListUsernameRequest(listUsername);
+
+        List<ProfileClientResponse> profileClientResponses = profileClient.getListUserProfileByUsername(listUsernameRequest);
+
+        Map<String, String> usernameToRole = users.stream()
+                .collect(
+                        Collectors.toMap(
+                                User::getUsername, User::getRoles));
+
+        List<UserResponse> userResponses = profileClientResponses.stream()
+                .map(profileClientResponse -> new UserResponse(
+                        profileClientResponse.getUserId(),
+                        profileClientResponse.getUsername(),
+                        profileClientResponse.getEmail(),
+                        profileClientResponse.getFullName(),
+                        profileClientResponse.getDob(),
+                        usernameToRole.get(profileClientResponse.getUsername())
+                )).toList();
+
+        boolean hasNext = users.size() == pageable.getNumberOfPages();
+
+        return new UserPagingResponse<>(userResponses, users.getLast().getUserId(), hasNext );
     }
 }
