@@ -6,5 +6,5 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ClassroomDetailMapper {
-    StudentResponse toAddStudentResponse(ClassroomDetail classroomDetail);
+    StudentResponse toStudentResponse(ClassroomDetail classroomDetail);
 }

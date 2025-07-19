@@ -71,4 +71,11 @@ public class ClassroomServiceImpl implements ClassroomService {
         Page<Classroom> classrooms = classroomRepository.searchClassrooms(q, pageable);
         return classrooms.map(classroomMapper::toClassroomResponse);
     }
+
+    @Override
+    public Page<ClassroomResponse> findClassroomsByTeacherUsername(String username, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Classroom> classrooms = classroomRepository.findByTeacherUsername(username, pageable);
+        return classrooms.map(classroomMapper::toClassroomResponse);
+    }
 }
