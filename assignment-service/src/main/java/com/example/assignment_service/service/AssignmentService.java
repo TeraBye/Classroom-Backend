@@ -2,6 +2,7 @@ package com.example.assignment_service.service;
 
 import com.example.assignment_service.dto.request.AssignmentCreateRequest;
 import com.example.assignment_service.dto.request.AssignmentUpdateRequest;
+import com.example.assignment_service.dto.request.ListIdRequest;
 import com.example.assignment_service.dto.response.AssignmentResponse;
 
 import java.util.List;
@@ -12,4 +13,5 @@ public interface AssignmentService {
     AssignmentResponse getAssignmentById(int assignmentId);
     AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request);
     void deleteAssignment(int assignmentId);
+    List<AssignmentResponse> getAssignmentsByIds(ListIdRequest request);
 }

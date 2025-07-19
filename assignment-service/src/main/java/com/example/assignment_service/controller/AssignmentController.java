@@ -2,6 +2,7 @@ package com.example.assignment_service.controller;
 
 import com.example.assignment_service.dto.request.AssignmentCreateRequest;
 import com.example.assignment_service.dto.request.AssignmentUpdateRequest;
+import com.example.assignment_service.dto.request.ListIdRequest;
 import com.example.assignment_service.dto.response.ApiResponse;
 import com.example.assignment_service.dto.response.AssignmentResponse;
 import com.example.assignment_service.service.AssignmentService;
@@ -53,5 +54,14 @@ public class AssignmentController {
         return ApiResponse.<Void>builder()
                 .message("Delete assignment successfully")
                 .build();
+    }
+
+    @PostMapping("/getAssignmentsByListId")
+    public ApiResponse<List<AssignmentResponse>> getAssignmentsByListId(
+            @RequestBody ListIdRequest request) {
+        return ApiResponse.<List<AssignmentResponse>>builder()
+                .result(assignmentService.getAssignmentsByIds(request))
+                .build();
+
     }
 }
