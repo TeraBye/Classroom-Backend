@@ -11,7 +11,7 @@ import java.security.GeneralSecurityException;
 import java.util.List;
 
 public interface AssignmentService {
-    AssignmentResponse createAssignment(AssignmentCreateRequest request);
+    AssignmentResponse createAssignment(AssignmentCreateRequest request) throws GeneralSecurityException, IOException;
     List<AssignmentResponse> getAllAssignments();
     AssignmentResponse getAssignmentById(int assignmentId);
     AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request);

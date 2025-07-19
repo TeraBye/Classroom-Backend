@@ -1,25 +1,9 @@
 package com.example.assignment_service.service.Impl;
 
-import com.example.assignment_service.dto.request.AssignmentCreateRequest;
-import com.example.assignment_service.dto.request.AssignmentUpdateRequest;
-import com.example.assignment_service.dto.response.AssignmentResponse;
-import com.example.assignment_service.entity.Assignment;
-import com.example.assignment_service.mapper.AssignmentMapper;
-import com.example.assignment_service.repository.AssignmentRepository;
-import com.example.assignment_service.service.AssignmentService;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.assignment_service.service.FileStorageService;
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.InputStreamContent;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.Permission;
-import com.google.auth.oauth2.GoogleCredentials;
-import jakarta.validation.Valid;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,51 +11,77 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.List;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FileStorageServiceImpl implements FileStorageService {
-    @Value("${google.drive.credentials.file}")
-    String credentialFile;
-    @Value("${google.drive.folder.id}")
-    String folderId;
+    @Value("${cloudinary.cloud.name}")
+    String cloudName;
 
-    private Drive getDriveService() throws IOException, GeneralSecurityException {
-        GoogleCredentials credential = GoogleCredentials.fromStream(
-          FileStorageService.class.getResourceAsStream(credentialFile)
-        ).createScoped(Collections.singleton("https://www.googleapis.com/auth/drive.file"));
+    @Value("${cloudinary.api.key}")
+    String apiKey;
 
-        return new Drive.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                JacksonFactory.getDefaultInstance(), (HttpRequestInitializer) credential)
-                .setApplicationName("Assignment Submission App")
-                .build();
+    @Value("${cloudinary.api.secret}")
+    String apiSecret;
+
+    @Value("${cloudinary.folder}")
+    String folder;
+
+    private Cloudinary getCloudinary() {
+        return new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", cloudName,
+                "api_key", apiKey,
+                "api_secret", apiSecret
+        ));
     }
+
     @Override
-    public String uploadFile(MultipartFile file, String studentUsername, Integer assignmentId) throws IOException, GeneralSecurityException {
-        Drive driveService = getDriveService();
+    public String uploadFile(MultipartFile file, String username, Optional<Integer> assignmentId, String role) throws IOException, GeneralSecurityException {
+        // Kiểm tra file
+        validateFile(file);
 
-        String fileName = studentUsername + "_" + assignmentId + "_" +file.getOriginalFilename();
+        // Khởi tạo Cloudinary
+        Cloudinary cloudinary = getCloudinary();
 
-        File fileMetadata = new File();
-        fileMetadata.setName(fileName);
-        fileMetadata.setParents(Collections.singletonList(folderId));
+        // Tạo tên file duy nhất
+        String fileName = role + "_" + username + "_";
+        if (assignmentId.isPresent()) {
+            fileName += assignmentId.get() + "_";
+        } else {
+            fileName += Instant.now().toEpochMilli() + "_"; // Dùng timestamp nếu không có assignmentId
+        }
 
-        InputStreamContent fileContent = new InputStreamContent(
-                file.getContentType(),
-                file.getInputStream()
-        );
+        fileName += file.getOriginalFilename();
+        // Upload file
+        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+                "folder", folder + "/" + role,
+                "public_id", fileName,
+                "resource_type", "auto", // Hỗ trợ mọi loại file (PDF, ZIP, DOCX)
+                "access_mode", "public" // Ai cũng có thể xem
+        ));
 
-        File uploadedFile = driveService.files().create(fileMetadata, fileContent)
-                .setFields("id, webViewLink")
-                .execute();
+        // Lấy URL
+        String fileUrl = (String) uploadResult.get("secure_url");
 
-        Permission permission = new Permission().setType("anyone").setRole("reader");
-        driveService.permissions().create(uploadedFile.getId(), permission).execute();
-        return uploadedFile.getWebViewLink();
+        return fileUrl;
+    }
+
+    private void validateFile(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be empty");
+        }
+
+        String[] allowedTypes = {"application/pdf", "application/zip", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"};
+        if (!Arrays.asList(allowedTypes).contains(file.getContentType())) {
+            throw new IllegalArgumentException("Invalid file type. Only PDF, ZIP, and DOCX are allowed.");
+        }
+
+        if (file.getSize() > 10 * 1024 * 1024) { // 10MB
+            throw new IllegalArgumentException("File size exceeds 10MB limit.");
+        }
     }
 }

@@ -17,13 +17,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,16 +32,27 @@ import java.util.Optional;
 public class AssignmentServiceImpl implements AssignmentService {
     AssignmentRepository assignmentRepository;
     AssignmentMapper assignmentMapper;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd:MM:yyyy");
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     FileStorageService fileStorageService;
     AssignmentDetailRepository assignmentDetailRepository;
     AssignmentDetailMapper assignmentDetailMapper;
 
     @Override
-    public AssignmentResponse createAssignment(AssignmentCreateRequest request) {
-        String formatted = request.getDeadline().format(formatter);
+    public AssignmentResponse createAssignment(AssignmentCreateRequest request) throws GeneralSecurityException, IOException {
+        // Upload file lên Cloudinary
+        String fileUrl = fileStorageService.uploadFile(request.getFile(), request.getUsername(), Optional.empty(), "TEACHER");
+
+        LocalDateTime deadline;
+        try {
+//            System.out.println("Raw deadline string: [" + request.getDeadline() + "]");
+            deadline = LocalDateTime.parse(request.getDeadline().trim());
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Sai định dạng deadline. Định dạng đúng: HH:mm:ss dd:MM:yyyy", e);
+        }
+
         Assignment assignment = assignmentMapper.toAssignment(request);
-        assignment.setAssignmentCode(request.getUsername() + "_assignment_" + formatted);
+        assignment.setAssignmentCode(request.getUsername() + "_assignment_" + deadline);
+        assignment.setFileUrl(fileUrl);
         assignment = assignmentRepository.save(assignment);
         return assignmentMapper.toAssignmentResponse(assignment);
     }
@@ -84,16 +94,14 @@ public class AssignmentServiceImpl implements AssignmentService {
     @Override
     public AssignmentDetailResponse submitAssignment(AssignmentSubmitRequest request) throws IOException, GeneralSecurityException {
         Assignment assignment = assignmentRepository.findById(request.getAssignmentId())
-                .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + request.getAssignmentId()));
+                .orElseThrow(() -> new IllegalArgumentException("Assignment not found with ID: " + request.getAssignmentId()));
 
-        if (assignment.getDeadline().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Overdue");
+        if (assignment.getDeadline() != null && assignment.getDeadline().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Assignment submission deadline has passed");
         }
-        validateFile(request.getFile());
 
         // Upload file lên Google Drive và lấy URL
-        String fileUrl = fileStorageService.uploadFile(request.getFile(), request.getStudentUsername(), request.getAssignmentId());
-
+        String fileUrl = fileStorageService.uploadFile(request.getFile(), request.getStudentUsername(), Optional.of(request.getAssignmentId()), "STUDENT");
 
         AssignmentDetail assignmentDetail = AssignmentDetail.builder()
                 .assignment(assignment)
@@ -107,18 +115,5 @@ public class AssignmentServiceImpl implements AssignmentService {
         return assignmentDetailMapper.toAssignmentResponse(assignmentDetail);
     }
 
-    private void validateFile(MultipartFile file) {
-        if (file.isEmpty()) {
-            throw new IllegalArgumentException("File cannot be empty");
-        }
 
-        String[] allowedTypes = {"application/pdf", "application/zip", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"};
-        if (!Arrays.asList(allowedTypes).contains(file.getContentType())) {
-            throw new IllegalArgumentException("Invalid file type. Only PDF, ZIP, and DOCX are allowed.");
-        }
-
-        if (file.getSize() > 10 * 1024 * 1024) { // 10MB
-            throw new IllegalArgumentException("File size exceeds 10MB limit.");
-        }
-    }
 }
