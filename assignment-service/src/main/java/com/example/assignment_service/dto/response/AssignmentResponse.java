@@ -24,4 +24,6 @@ public class AssignmentResponse {
     String assignmentCode;
 
     String username;
+
+    Integer classroomId;
 }

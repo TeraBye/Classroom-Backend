@@ -47,27 +47,56 @@ public class FileStorageServiceImpl implements FileStorageService {
         // Khởi tạo Cloudinary
         Cloudinary cloudinary = getCloudinary();
 
-        // Tạo tên file duy nhất
-        String fileName = role + "_" + username + "_";
-        if (assignmentId.isPresent()) {
-            fileName += assignmentId.get() + "_";
-        } else {
-            fileName += Instant.now().toEpochMilli() + "_"; // Dùng timestamp nếu không có assignmentId
-        }
+        // Extract base filename and extension
+        String originalFilename = file.getOriginalFilename();
+        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
+        String baseFilename = originalFilename.substring(0, originalFilename.lastIndexOf("."));
 
-        fileName += file.getOriginalFilename();
-        // Upload file
+        // Construct unique public_id
+        String publicId = role + "_" + username + "_";
+        if (assignmentId.isPresent()) {
+            publicId += assignmentId.get() + "_";
+        } else {
+            publicId += Instant.now().toEpochMilli() + "_";
+        }
+        publicId += originalFilename;
+
+        // Upload file with resource_type "raw" for non-image files
         Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
                 "folder", folder + "/" + role,
-                "public_id", fileName,
-                "resource_type", "auto", // Hỗ trợ mọi loại file (PDF, ZIP, DOCX)
-                "access_mode", "public" // Ai cũng có thể xem
+                "public_id", publicId,
+                "resource_type", "raw", // Explicitly set to raw for PDFs, ZIPs, DOCX
+                "access_mode", "public"
         ));
 
         // Lấy URL
-        String fileUrl = (String) uploadResult.get("secure_url");
 
-        return fileUrl;
+        return (String) uploadResult.get("secure_url");
+    }
+
+    @Override
+    public void deleteFile(String fileUrl) throws IOException, GeneralSecurityException {
+        if (fileUrl == null) {
+            return;
+        }
+
+        Cloudinary cloudinary = getCloudinary();
+
+        // Extract public_id from fileUrl
+        String publicId = extractPublicIdFromUrl(fileUrl);
+
+        // Delete the file from Cloudinary
+        cloudinary.uploader().destroy(publicId, ObjectUtils.asMap(
+                "resource_type", "raw"
+        ));
+    }
+
+    private String extractPublicIdFromUrl(String fileUrl) {
+        // Example URL: https://res.cloudinary.com/<cloud_name>/raw/upload/v1234567890/<folder>/<public_id>.pdf
+        String[] parts = fileUrl.split("/");
+        String fileName = parts[parts.length - 1];
+        String publicId = folder + "/TEACHER/" + fileName.substring(0, fileName.lastIndexOf("."));
+        return publicId;
     }
 
     private void validateFile(MultipartFile file) {

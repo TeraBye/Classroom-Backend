@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface FileStorageService {
     String uploadFile(MultipartFile file, String username, Optional<Integer> assignmentId, String role) throws IOException, GeneralSecurityException;
+    void deleteFile(String fileUrl) throws IOException, GeneralSecurityException;
 }

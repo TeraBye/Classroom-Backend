@@ -20,7 +20,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -32,7 +34,8 @@ import java.util.Optional;
 public class AssignmentServiceImpl implements AssignmentService {
     AssignmentRepository assignmentRepository;
     AssignmentMapper assignmentMapper;
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd:MM:yyyy");
     FileStorageService fileStorageService;
     AssignmentDetailRepository assignmentDetailRepository;
     AssignmentDetailMapper assignmentDetailMapper;
@@ -42,17 +45,22 @@ public class AssignmentServiceImpl implements AssignmentService {
         // Upload file lên Cloudinary
         String fileUrl = fileStorageService.uploadFile(request.getFile(), request.getUsername(), Optional.empty(), "TEACHER");
 
-        LocalDateTime deadline;
-        try {
-//            System.out.println("Raw deadline string: [" + request.getDeadline() + "]");
-            deadline = LocalDateTime.parse(request.getDeadline().trim());
-        } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Sai định dạng deadline. Định dạng đúng: HH:mm:ss dd:MM:yyyy", e);
-        }
+//        LocalDateTime deadline;
 
-        Assignment assignment = assignmentMapper.toAssignment(request);
-        assignment.setAssignmentCode(request.getUsername() + "_assignment_" + deadline);
+        String[] parts = request.getDeadline().split(" ");
+        LocalTime time = LocalTime.parse(parts[0], timeFormatter);
+        LocalDate date = LocalDate.parse(parts[1], dateFormatter);
+
+        LocalDateTime dateTime = LocalDateTime.of(date, time);
+
+//        Assignment assignment = assignmentMapper.toAssignment(request);
+        Assignment assignment = new Assignment();
+        assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline());
+        assignment.setDeadline(dateTime);
         assignment.setFileUrl(fileUrl);
+        assignment.setName(request.getName());
+        assignment.setUsername(request.getUsername());
+        assignment.setClassroomId(request.getClassroomId());
         assignment = assignmentRepository.save(assignment);
         return assignmentMapper.toAssignmentResponse(assignment);
     }
@@ -70,24 +78,55 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
-    public AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request) {
-        String formatted = request.getDeadline().format(formatter);
-        Optional<Assignment> assignmentOptional = assignmentRepository.findById(assignmentId);
-        Assignment assignment = null;
-        if (assignmentOptional.isPresent()) {
-            assignment = assignmentOptional.get();
+    public AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request) throws GeneralSecurityException, IOException {
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
+
+        // Handle file upload if a new file is provided
+        String newFileUrl = assignment.getFileUrl();
+        if (request.getFile() != null && !request.getFile().isEmpty()) {
+            // Delete the old file if it exists
+            if (assignment.getFileUrl() != null) {
+                fileStorageService.deleteFile(assignment.getFileUrl());
+            }
+            // Upload the new file
+            newFileUrl = fileStorageService.uploadFile(request.getFile(), request.getUsername(), Optional.of(assignmentId), "TEACHER");
         }
+
+        // Parse the deadline if provided
+        LocalDateTime deadline = assignment.getDeadline();
+        if (request.getDeadline() != null && !request.getDeadline().isBlank()) {
+            String[] parts = request.getDeadline().split(" ");
+            LocalTime time = LocalTime.parse(parts[0], timeFormatter);
+            LocalDate date = LocalDate.parse(parts[1], dateFormatter);
+            deadline = LocalDateTime.of(date, time);
+        }
+
+        // Update assignment code if username or deadline changed
+        if (request.getUsername() != null && !request.getUsername().isBlank() &&
+                request.getDeadline() != null && !request.getDeadline().isBlank() &&
+                (!assignment.getUsername().equals(request.getUsername()) || !assignment.getDeadline().equals(deadline))) {
+            assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline());
+        }
+
         if (!assignment.getDeadline().equals(request.getDeadline()) ||
                 !assignment.getUsername().equals(request.getUsername())) {
-            assignment.setAssignmentCode(request.getUsername() + "_assignment_" + formatted);
+            assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline());
         }
         assignmentMapper.updateAssignment(assignment, request);
+        assignment.setFileUrl(newFileUrl);
+        assignment.setDeadline(deadline);
         assignmentRepository.save(assignment);
         return assignmentMapper.toAssignmentResponse(assignment);
     }
 
     @Override
-    public void deleteAssignment(int assignmentId) {
+    public void deleteAssignment(int assignmentId) throws GeneralSecurityException, IOException {
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
+        if (assignment.getFileUrl() != null) {
+            fileStorageService.deleteFile(assignment.getFileUrl());
+        }
         assignmentRepository.deleteById(assignmentId);
     }
 

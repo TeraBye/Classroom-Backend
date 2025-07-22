@@ -29,4 +29,7 @@ public class Assignment {
 
     private String username;
 
+    @Column(name = "classroom_id")
+    private Integer classroomId;
+
 }

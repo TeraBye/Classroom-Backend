@@ -46,15 +46,15 @@ public class AssignmentController {
                 .build();
     }
 
-    @PutMapping("/{assignmentId}")
-    public ApiResponse<AssignmentResponse> updateAssignment(@PathVariable int assignmentId, @RequestBody AssignmentUpdateRequest request) {
+    @PutMapping(value = "/{assignmentId}", consumes = {"multipart/form-data"})
+    public ApiResponse<AssignmentResponse> updateAssignment(@PathVariable int assignmentId, @RequestBody AssignmentUpdateRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentResponse>builder()
                 .result(assignmentService.updateAssignment(assignmentId, request))
                 .build();
     }
 
     @DeleteMapping("/{assignmentId}")
-    public ApiResponse<Void> deleteAssignment(@PathVariable int assignmentId) {
+    public ApiResponse<Void> deleteAssignment(@PathVariable int assignmentId) throws GeneralSecurityException, IOException {
         assignmentService.deleteAssignment(assignmentId);
         return ApiResponse.<Void>builder()
                 .message("Delete assignment successfully")

@@ -14,7 +14,7 @@ public interface AssignmentService {
     AssignmentResponse createAssignment(AssignmentCreateRequest request) throws GeneralSecurityException, IOException;
     List<AssignmentResponse> getAllAssignments();
     AssignmentResponse getAssignmentById(int assignmentId);
-    AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request);
-    void deleteAssignment(int assignmentId);
+    AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request) throws GeneralSecurityException, IOException;
+    void deleteAssignment(int assignmentId) throws GeneralSecurityException, IOException;
     AssignmentDetailResponse submitAssignment(AssignmentSubmitRequest request) throws IOException, GeneralSecurityException;
 }

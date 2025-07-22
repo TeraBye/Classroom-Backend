@@ -25,4 +25,6 @@ public class AssignmentCreateRequest {
     String name;
 
     String username;
+
+    Integer classroomId;
 }
