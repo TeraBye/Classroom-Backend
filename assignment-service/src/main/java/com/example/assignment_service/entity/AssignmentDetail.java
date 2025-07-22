@@ -7,29 +7,28 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "assignment")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Assignment {
+public class AssignmentDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(nullable = false)
     private Integer id;
+
+    @ManyToOne
+    @JoinColumn(name = "assignment_id")
+    private Assignment assignment;
+
+    @Column(name = "submit_time")
+    @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
+    private LocalDateTime submitTime;
 
     private String fileUrl;
 
-    @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
-    private LocalDateTime deadline;
-
-    private String name;
-
-    private String assignmentCode;
-
-    private String username;
-
-    @Column(name = "classroom_id")
-    private Integer classroomId;
+    @Column(name = "student_username")
+    private String studentUsername;
 
 }

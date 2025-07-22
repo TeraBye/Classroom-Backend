@@ -13,9 +13,9 @@
 	</parent>
 
 	<groupId>com.example</groupId>
-	<artifactId>assignment-service</artifactId>
+	<artifactId>question-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>assignment-service</name>
+	<name>question-service</name>
 	<description>Demo project for Spring Boot</description>
 
 	<properties>
@@ -99,12 +99,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-neo4j</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.cloudinary</groupId>
-			<artifactId>cloudinary-http44</artifactId>
-			<version>1.38.0</version>
 		</dependency>
 
 	</dependencies>
@@ -193,10 +187,10 @@
 				</executions>
 				<configuration>
 					<excludes>
-						<exclude>com/devteria/assignmentservice/dto/**</exclude>
-						<exclude>com/devteria/assignmentservice/entity/**</exclude>
-						<exclude>com/devteria/assignmentservice/mapper/**</exclude>
-						<exclude>com/devteria/assignmentservice/configuration/**</exclude>
+						<exclude>com/devteria/questionservice/dto/**</exclude>
+						<exclude>com/devteria/questionservice/entity/**</exclude>
+						<exclude>com/devteria/questionservice/mapper/**</exclude>
+						<exclude>com/devteria/questionservice/configuration/**</exclude>
 					</excludes>
 				</configuration>
 			</plugin>

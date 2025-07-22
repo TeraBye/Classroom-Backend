@@ -22,6 +22,8 @@ public class SubjectServiceImpl implements SubjectService {
     SubjectMapper subjectMapper;
     @Override
     public SubjectResponse createSubject(SubjectCreateRequest request) {
+        if (subjectRepository.existsByName(request.getName()))
+            throw new RuntimeException("Subject existed");
         Subject subject = subjectMapper.toSubject(request);
         return subjectMapper.toSubjectResponse(subjectRepository.save(subject));
     }
