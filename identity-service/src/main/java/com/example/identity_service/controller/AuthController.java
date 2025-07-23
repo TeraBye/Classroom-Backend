@@ -58,7 +58,6 @@ public class AuthController {
     @PostMapping("/admin-login")
     ApiResponse<AuthResponse> loginByAdmin(@RequestBody AuthRequest authRequest, HttpServletResponse response){
         var result = authService.authenticate(authRequest);
-        result.setToken("");
         String token = result.getToken();
         Cookie cookie = new Cookie("token",token);
         cookie.setSecure(false);
@@ -66,6 +65,7 @@ public class AuthController {
         cookie.setMaxAge(7 * 24 * 60 * 60); // 7 ngày
         cookie.setAttribute("SameSite", "Strict"); // hoặc "Lax", "None" (None nếu dùng cross-origin)
 
+        result.setToken("");  // ẩn token
         response.addCookie(cookie);
         return ApiResponse.<AuthResponse>builder().result(result).build();
     }

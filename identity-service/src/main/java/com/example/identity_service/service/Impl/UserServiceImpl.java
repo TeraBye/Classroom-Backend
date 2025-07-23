@@ -1,16 +1,16 @@
 package com.example.identity_service.service.Impl;
 
-import java.awt.print.Pageable;
+import com.example.identity_service.dto.request.*;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Pageable;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.example.identity_service.dto.request.ListUsernameRequest;
-import com.example.identity_service.dto.request.ProfileCreationRequest;
-import com.example.identity_service.dto.response.ProfileClientResponse;
-import com.example.identity_service.dto.response.UserPagingResponse;
-import com.example.identity_service.dto.response.UserProfileResponse;
+import com.example.identity_service.dto.response.*;
 import com.example.identity_service.mapper.ProfileMapper;
 import com.example.identity_service.repository.httpclient.ProfileClient;
 import org.springframework.data.domain.Page;
@@ -21,9 +21,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.example.identity_service.dto.request.UserRequestDTO;
-import com.example.identity_service.dto.request.UserUpdateRequest;
-import com.example.identity_service.dto.response.UserResponse;
 import com.example.identity_service.entity.User;
 import com.example.identity_service.enums.Role;
 import com.example.identity_service.exception.AppException;
@@ -44,6 +41,7 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
     ProfileClient profileClient;
     ProfileMapper profileMapper;
+    PasswordEncoder passwordEncoder;
 
     @Override
     public UserProfileResponse createUser(UserRequestDTO userRequestDTO) {
@@ -115,22 +113,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserPagingResponse<UserResponse> getPageUsersProfile(int cursor, Pageable pageable) {
+    public UserPagingResponse<UserDetailsResponse> getPageUsersProfile(int cursor, Pageable pageable) {
         List<User> users = userRepository.findNextPage(cursor, pageable);
         List<String> listUsername = users.stream()
                 .map(User::getUsername).toList();
         ListUsernameRequest listUsernameRequest = new ListUsernameRequest(listUsername);
 
-        List<ProfileClientResponse> profileClientResponses = profileClient.getListUserProfileByUsername(listUsernameRequest);
+        List<ProfileClientResponse> profileClientResponses = profileClient.getListUserProfileByUsername(listUsernameRequest).getResult();
 
         Map<String, String> usernameToRole = users.stream()
                 .collect(
                         Collectors.toMap(
                                 User::getUsername, User::getRoles));
 
-        List<UserResponse> userResponses = profileClientResponses.stream()
-                .map(profileClientResponse -> new UserResponse(
+        List<UserDetailsResponse> userResponses = profileClientResponses.stream()
+                .map(profileClientResponse -> new UserDetailsResponse(
                         profileClientResponse.getUserId(),
+                        profileClientResponse.getAvatar(),
                         profileClientResponse.getUsername(),
                         profileClientResponse.getEmail(),
                         profileClientResponse.getFullName(),
@@ -138,8 +137,60 @@ public class UserServiceImpl implements UserService {
                         usernameToRole.get(profileClientResponse.getUsername())
                 )).toList();
 
-        boolean hasNext = users.size() == pageable.getNumberOfPages();
+        boolean hasNext = users.size() == pageable.getPageSize();
+        int lastCursor = users.isEmpty() ? cursor : users.getLast().getUserId();
 
-        return new UserPagingResponse<>(userResponses, users.getLast().getUserId(), hasNext );
+        return new UserPagingResponse<>(userResponses, lastCursor, hasNext);
+    }
+
+    @Override
+    public AccountResponse createNewUser(AccountRequest accountRequest) {
+        Optional<User> userOptional = userRepository.findByUsername(accountRequest.getUsername());
+        if (userOptional.isPresent()){
+            throw new DuplicateKeyException("username already exist");
+        }
+        User user = new User();
+        user.setUsername(accountRequest.getUsername());
+        user.setPassword(passwordEncoder.encode(accountRequest.getPassword()));
+        user.setRoles(accountRequest.getRoles());
+
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new RuntimeException("can not create new user");
+        }
+
+        return new AccountResponse(user.getUserId(), user.getUsername());
+    }
+
+    @Override
+    public boolean deleteUserAccountByUserId(int userId) {
+        Optional<User> userOptional = userRepository.getUserProfileByUserId(userId);
+        if (userOptional.isPresent()) {
+            try {
+                userRepository.delete(userOptional.get());
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Can not delete userProfile " + e);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean updateAccount(AccountUpdateRequest accountUpdateRequest) {
+        Optional<User> userOptional = userRepository.getUserProfileByUserId(accountUpdateRequest.getUserId());
+        if (userOptional.isPresent()) {
+            try {
+                User user = userOptional.get();
+                user.setUsername(accountUpdateRequest.getUsername());
+                user.setRoles(accountUpdateRequest.getRoles());
+                userRepository.save(user);
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Can not update userProfile " + e);
+            }
+            return true;
+        }
+        return false;
     }
 }

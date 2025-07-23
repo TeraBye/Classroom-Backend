@@ -25,6 +25,6 @@ public interface ProfileClient {
             @PathVariable("username") String username);
 
     @GetMapping(value = "/users/getListUserByListUsername", produces = MediaType.APPLICATION_JSON_VALUE)
-    List<ProfileClientResponse> getListUserProfileByUsername(
+    ApiResponse<List<ProfileClientResponse>> getListUserProfileByUsername(
             @RequestBody ListUsernameRequest listUsernameRequest);
 }

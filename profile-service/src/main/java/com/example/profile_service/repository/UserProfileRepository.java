@@ -18,6 +18,8 @@ public interface UserProfileRepository extends Neo4jRepository<UserProfile, Stri
     @Query("MATCH (u:UserProfile) WHERE u.username IN $usernames RETURN u")
     List<UserProfile> findAllByUsernames(List<String> usernames);
 
+    Optional<UserProfile> findByUserId(int userId);
+
     @Query(
             value = "MATCH (up:UserProfile) " +
                     "WHERE toLower(up.username) CONTAINS toLower($q) " +
@@ -31,4 +33,5 @@ public interface UserProfileRepository extends Neo4jRepository<UserProfile, Stri
                     "RETURN count(up)"
     )
     Page<UserProfile> searchUsers(@Param("q") String q, Pageable pageable);
+
 }
