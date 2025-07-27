@@ -21,12 +21,13 @@ import java.util.concurrent.CompletableFuture;
 public class SearchServiceImpl implements SearchService {
     ProfileClient profileClient;
     ClassroomClient classroomClient;
+
     @Override
     public SearchResponse search(String q, int page, int size) {
         /*
-        * CompletableFuture để gọi hai API song song, bat đồng bộ
-        * supplyAsync chạy tác vụ này trong một thread pool, giúp tránh chặn (blocking) thread chính của ứng dụng
-        * */
+         * CompletableFuture để gọi hai API song song, bat đồng bộ
+         * supplyAsync chạy tác vụ này trong một thread pool, giúp tránh chặn (blocking) thread chính của ứng dụng
+         * */
         CompletableFuture<ApiResponse<Page<UserProfileResponse>>> userFuture =
                 CompletableFuture.supplyAsync(() -> profileClient.searchUsers(q, page, size));
 
@@ -42,4 +43,15 @@ public class SearchServiceImpl implements SearchService {
                 .classrooms(classroomFuture.join().getResult())
                 .build();
     }
+
+    @Override
+    public Page<ClassroomResponse> searchClassrooms(String q, int page, int size) {
+        return classroomClient.searchClassrooms(q, page, size).getResult();
+    }
+
+    @Override
+    public Page<UserProfileResponse> searchUsers(String q, int page, int size) {
+        return profileClient.searchUsers(q, page, size).getResult();
+    }
+
 }
