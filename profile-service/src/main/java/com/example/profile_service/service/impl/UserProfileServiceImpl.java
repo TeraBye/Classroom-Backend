@@ -4,6 +4,7 @@ import com.example.profile_service.dto.request.*;
 import com.example.profile_service.dto.response.UserProfileResponse;
 import com.example.profile_service.entity.UserProfile;
 import com.example.profile_service.dto.response.AccountResponse;
+import com.example.profile_service.exception.BusinessException;
 import com.example.profile_service.mappper.UserProfileMapper;
 import com.example.profile_service.repository.UserProfileRepository;
 import com.example.profile_service.repository.httpClient.IdentityClient;
@@ -80,7 +81,7 @@ public class UserProfileServiceImpl implements UserProfileService {
 
         Optional<UserProfile> userProfileOptional = userProfileRepository.findByUsername(createUserRequest.getUsername());
         if (userProfileOptional.isPresent()) {
-            return false;
+            throw new BusinessException("User already exist.");
         }
 
         AccountRequest accountProfileRequest = new AccountRequest();
