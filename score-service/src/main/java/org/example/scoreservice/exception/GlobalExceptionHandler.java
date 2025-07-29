@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     // Lỗi business logic: custom BadRequestException
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<String>> handleBadRequest(BusinessException ex) {
-        return ResponseEntity.badRequest().body(
+        return ResponseEntity.status(HttpStatus.OK).body(
                 ApiResponse.<String>builder()
                         .code(4003)
                         .message(ex.getMessage())
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.internalServerError().body(
                 ApiResponse.<String>builder()
                         .code(5000)
-                        .message("Lỗi hệ thống. Vui lòng thử lại sau.")
+                        .message(ex.getMessage())
                         .build()
         );
     }

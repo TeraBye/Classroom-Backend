@@ -11,7 +11,7 @@ public class ScoreResponse {
 
     Float score;
 
-    String studentId;
+    int studentId;
 
     String classroomId;
 

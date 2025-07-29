@@ -20,7 +20,7 @@ public class ScoreDetail {
 
     Float score;
 
-    String studentId;
+    int studentId;
 
     String classroomId;
 

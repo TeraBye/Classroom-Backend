@@ -15,5 +15,6 @@ spring:
 
 app:
   services:
-    identity: http://localhost:8080/api/identity
     profile: http://localhost:8081/api/profile
+    identity: http://localhost:8080/api/identity
+

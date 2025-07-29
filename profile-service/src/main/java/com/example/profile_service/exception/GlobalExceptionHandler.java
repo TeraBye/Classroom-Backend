@@ -97,7 +97,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.internalServerError().body(
                 ApiResponse.<String>builder()
                         .code(5000)
-                        .message("Lỗi hệ thống. Vui lòng thử lại sau.")
+                        .message(ex.getMessage())
                         .build()
         );
     }

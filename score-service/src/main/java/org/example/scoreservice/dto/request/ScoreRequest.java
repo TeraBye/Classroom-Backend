@@ -11,7 +11,7 @@ public class ScoreRequest {
 
     Float score;
 
-    String studentId;
+    int studentId;
 
     String classroomId;
 
