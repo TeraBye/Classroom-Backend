@@ -40,6 +40,10 @@ spring:
               predicates:
                 - Path=/api/searches/**
 
+            - id: questions-service
+              uri: http://localhost:8086
+              predicates:
+                - Path=/api/questions/**
 
             - id: score-service
               uri: http://localhost:8088

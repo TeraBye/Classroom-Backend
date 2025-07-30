@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,4 +56,13 @@ public class SubjectServiceImpl implements SubjectService {
         subjectRepository.deleteById(subjectId);
     }
 
+    @Override
+    public List<SubjectResponse> getListSubjectsById(List<Integer> listSubjectId){
+        List<SubjectResponse> subjectResponses = new ArrayList<>();
+        for(Integer subjectId:listSubjectId){
+            Optional<Subject> subject = (subjectRepository.findById(subjectId));
+            subject.ifPresent(value -> subjectResponses.add(new SubjectResponse(subjectId, value.getName())));
+        }
+        return subjectResponses;
+    }
 }

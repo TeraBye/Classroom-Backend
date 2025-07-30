@@ -30,6 +30,7 @@ public class QuestionCreateRequest {
 
      String explanation;
 
+     @Enumerated(EnumType.STRING)
      Level level;
 
      String username;
