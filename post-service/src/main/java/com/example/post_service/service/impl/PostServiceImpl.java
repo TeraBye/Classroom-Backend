@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ public class PostServiceImpl implements PostService {
     ProfileClient profileClient;
     AssignmentClient assignmentClient;
     PostMapper postMapper;
+    SimpMessagingTemplate messagingTemplate;
 
     @Override
     public UserPostResponse createPost(PostCreationRequest request){
@@ -57,6 +59,11 @@ public class PostServiceImpl implements PostService {
                 assignmentResponse,
                 userProfileResponse,
                 request
+        );
+
+        messagingTemplate.convertAndSend(
+                "/topic/posts/" + request.getClassId(),
+                response
         );
 
         return response;
