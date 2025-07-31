@@ -3,6 +3,7 @@ package com.example.question_service.service;
 import com.example.question_service.dto.request.QuestionCreateRequest;
 import com.example.question_service.dto.request.QuestionUpdateRequest;
 import com.example.question_service.dto.response.QuestionResponse;
+import com.example.question_service.entity.Question;
 
 import java.util.List;
 
@@ -13,4 +14,5 @@ public interface QuestionService {
     QuestionResponse updateQuestion(int questionId, QuestionUpdateRequest request);
     void deleteQuestion(int questionId);
     List<QuestionResponse> getQuestionsBySubjectId(int subjectId);
+    List<QuestionResponse> getRandomQuestionsBySubject(Integer subjectId, int n) throws IllegalStateException;
 }

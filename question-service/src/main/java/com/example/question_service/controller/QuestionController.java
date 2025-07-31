@@ -60,4 +60,12 @@ public class QuestionController {
                 .result(questionService.getQuestionsBySubjectId(subjectId))
                 .build();
     }
+    @GetMapping("/random")
+    public ApiResponse<List<QuestionResponse>> getRandomQuestions(
+            @RequestParam Integer subjectId, @RequestParam Integer n) {
+        return ApiResponse.<List<QuestionResponse>>builder()
+                .result(questionService.getRandomQuestionsBySubject(subjectId,n))
+                .build();
+
+    }
 }
