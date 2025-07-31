@@ -44,3 +44,8 @@ spring:
               uri: http://localhost:8086
               predicates:
                 - Path=/api/questions/**
+
+            - id: post-service
+              uri: http://localhost:8087
+              predicates:
+                - Path=/api/post/**

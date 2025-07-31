@@ -4,6 +4,7 @@ import com.example.assignment_service.dto.request.AssignmentCreateRequest;
 import com.example.assignment_service.dto.request.AssignmentSubmitRequest;
 import com.example.assignment_service.dto.request.AssignmentUpdateRequest;
 import com.example.assignment_service.dto.response.AssignmentDetailResponse;
+import com.example.assignment_service.dto.request.ListIdRequest;
 import com.example.assignment_service.dto.response.AssignmentResponse;
 import com.example.assignment_service.entity.Assignment;
 import com.example.assignment_service.entity.AssignmentDetail;
@@ -26,7 +27,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -155,4 +158,31 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
 
+
+    @Override
+    public List<AssignmentResponse> getAssignmentsByIds(ListIdRequest request){
+        return getAssignmentResponsesFromIds(request.getIdsList());
+    }
+
+    public List<AssignmentResponse> getAssignmentResponsesFromIds(List<Integer> assignmentIds) {
+        List<Integer> validIds = assignmentIds.stream()
+                .filter(id -> id > 0)
+                .collect(Collectors.toList());
+
+        List<Assignment> assignments = assignmentRepository.findByIdIn(validIds);
+
+        Map<Integer, Assignment> assignmentMap = assignments.stream()
+                .collect(Collectors.toMap(Assignment::getId, a -> a));
+
+        return assignmentIds.stream()
+                .map(id -> {
+                    if (id == 0) {
+                        return null;
+                    }
+                    Assignment assignment = assignmentMap.get(id);
+                    return assignment != null ? assignmentMapper.toAssignmentResponse(assignment) : null;
+                })
+                .collect(Collectors.toList());
+    }
 }
+
