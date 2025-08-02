@@ -1,6 +1,7 @@
 package com.example.question_service.service.Impl;
 
 import com.example.question_service.dto.request.QuestionCreateRequest;
+import com.example.question_service.dto.request.QuestionIdsRequest;
 import com.example.question_service.dto.request.QuestionUpdateRequest;
 import com.example.question_service.dto.response.QuestionResponse;
 import com.example.question_service.entity.Question;
@@ -108,5 +109,12 @@ public class QuestionServiceImpl implements QuestionService {
         }
 
         return questionMapper.toQuestionResponses(questions);
+    }
+
+    @Override
+    public List<QuestionResponse> getQuestionByIds(QuestionIdsRequest request){
+        return  questionMapper.toQuestionResponses(
+                questionRepository.findByIdIn(request.getQuestionIds())
+        );
     }
 }

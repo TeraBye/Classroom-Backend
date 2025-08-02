@@ -25,7 +25,7 @@ public class ExamSubmission {
     private Exam exam;
 
     @Column(name = "started_at")
-    private LocalDateTime startedAt;
+    private LocalDateTime startedAt = LocalDateTime.now();
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;

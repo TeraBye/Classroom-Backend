@@ -1,6 +1,7 @@
 package com.example.question_service.controller;
 
 import com.example.question_service.dto.request.QuestionCreateRequest;
+import com.example.question_service.dto.request.QuestionIdsRequest;
 import com.example.question_service.dto.request.QuestionUpdateRequest;
 import com.example.question_service.dto.response.ApiResponse;
 import com.example.question_service.dto.response.QuestionResponse;
@@ -60,11 +61,20 @@ public class QuestionController {
                 .result(questionService.getQuestionsBySubjectId(subjectId))
                 .build();
     }
+    //Luan lam
     @GetMapping("/random")
     public ApiResponse<List<QuestionResponse>> getRandomQuestions(
             @RequestParam Integer subjectId, @RequestParam Integer n) {
         return ApiResponse.<List<QuestionResponse>>builder()
                 .result(questionService.getRandomQuestionsBySubject(subjectId,n))
+                .build();
+
+    }
+
+    @PostMapping("/getQuestions-by-ids")
+    public ApiResponse<List<QuestionResponse>> getQuestionsByIds(@RequestBody QuestionIdsRequest request) {
+        return ApiResponse.<List<QuestionResponse>>builder()
+                .result(questionService.getQuestionByIds(request))
                 .build();
 
     }

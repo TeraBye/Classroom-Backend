@@ -28,7 +28,7 @@ public class ExamCreationRequest {
 
     private String teacher;
 
-    private String classId;
+    private Integer classId;
 
-    private String subjectId;
+    private Integer subjectId;
 }

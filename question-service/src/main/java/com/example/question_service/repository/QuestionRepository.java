@@ -19,4 +19,6 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
     List<Question> findRandomBySubjectIdAndLevel(@Param("subjectId") Integer subjectId, @Param("level") Level level, Pageable pageable);
 
     long countBySubjectIdAndLevel(Integer subjectId, Level level);
+
+    List<Question> findByIdIn(List<Integer> ids);
 }

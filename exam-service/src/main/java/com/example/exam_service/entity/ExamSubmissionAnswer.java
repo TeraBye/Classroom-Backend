@@ -20,7 +20,7 @@ public class ExamSubmissionAnswer {
     private ExamSubmission submission;
 
     @Column(name = "question_id", nullable = false)
-    private Long questionId;
+    private int questionId;
 
     @Column(name = "selected_option", length = 1)
     private String selectedOption;

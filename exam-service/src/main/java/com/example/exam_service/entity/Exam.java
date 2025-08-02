@@ -38,8 +38,8 @@ public class Exam {
     private String teacher;
 
     @Column(name = "class_id")
-    private String classId;
+    private Integer classId;
 
     @Column(name = "subject_id")
-    private String subjectId;
+    private Integer subjectId;
 }
