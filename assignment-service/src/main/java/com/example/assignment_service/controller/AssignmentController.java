@@ -26,8 +26,8 @@ import java.util.List;
 public class AssignmentController {
     AssignmentService assignmentService;
 
-    @PostMapping(value = "/create", consumes = {"multipart/form-data"})
-    public ApiResponse<AssignmentResponse> createAssignment(@Valid @ModelAttribute AssignmentCreateRequest request) throws GeneralSecurityException, IOException {
+    @PostMapping(value = "/create")
+    public ApiResponse<AssignmentResponse> createAssignment(@Valid @RequestBody AssignmentCreateRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentResponse>builder()
                 .result(assignmentService.createAssignment(request))
                 .build();

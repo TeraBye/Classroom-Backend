@@ -45,8 +45,7 @@ public class AssignmentServiceImpl implements AssignmentService {
 
     @Override
     public AssignmentResponse createAssignment(AssignmentCreateRequest request) throws GeneralSecurityException, IOException {
-        // Upload file lên Cloudinary
-        String fileUrl = fileStorageService.uploadFile(request.getFile(), request.getUsername(), Optional.empty(), "TEACHER");
+
 
 //        LocalDateTime deadline;
 
@@ -60,7 +59,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         Assignment assignment = new Assignment();
         assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline());
         assignment.setDeadline(dateTime);
-        assignment.setFileUrl(fileUrl);
+        assignment.setFileUrl(request.getFileUrl());
         assignment.setName(request.getName());
         assignment.setUsername(request.getUsername());
         assignment.setClassroomId(request.getClassroomId());
