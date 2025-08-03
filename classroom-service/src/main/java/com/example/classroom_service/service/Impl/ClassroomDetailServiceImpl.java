@@ -85,7 +85,7 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
         Pageable pageable = PageRequest.of(page, size);
 
         // Fetch paged usernames from repository
-        Page<String> usernamePage = classroomDetailRepository.findStudentUsernamesByClassroomId(classroomId, pageable);
+        Page<String> usernamePage = classroomDetailRepository.findStudentUsernamesByClassroomIdPagination(classroomId, pageable);
 
         // Check if usernames are empty
         if (usernamePage.getContent().isEmpty()) {
@@ -108,5 +108,10 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
 
         // Return paged result
         return new PageImpl<>(profiles, pageable, usernamePage.getTotalElements());
+    }
+
+    @Override
+    public List<String> findStudentUsernamesByClassroomId(int classroomId) {
+        return classroomDetailRepository.findStudentUsernamesByClassroomId(classroomId);
     }
 }

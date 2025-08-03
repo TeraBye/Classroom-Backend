@@ -118,4 +118,11 @@ public class ClassroomController {
                 .result(classroomDetailService.getStudentsOfClass(classroomId, page, size))
                 .build();
     }
+
+    @GetMapping("/get-student-usernames/{classroomId}")
+    public ApiResponse<List<String>> findStudentUsernamesByClassroomId(@PathVariable int classroomId) {
+        return ApiResponse.<List<String>>builder()
+                .result(classroomDetailService.findStudentUsernamesByClassroomId(classroomId))
+                .build();
+    }
 }
