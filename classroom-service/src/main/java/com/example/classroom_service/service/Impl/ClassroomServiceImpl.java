@@ -2,16 +2,21 @@ package com.example.classroom_service.service.Impl;
 
 import com.example.classroom_service.dto.request.ClassroomCreateRequest;
 import com.example.classroom_service.dto.request.ClassroomUpdateRequest;
+import com.example.classroom_service.dto.request.ListUsernameRequest;
 import com.example.classroom_service.dto.response.ClassroomResponse;
+import com.example.classroom_service.dto.response.UserProfileResponse;
 import com.example.classroom_service.entity.Classroom;
 import com.example.classroom_service.mapper.ClassroomMapper;
+import com.example.classroom_service.repository.ClassroomDetailRepository;
 import com.example.classroom_service.repository.ClassroomRepository;
+import com.example.classroom_service.repository.httpclient.ProfileClient;
 import com.example.classroom_service.service.ClassroomService;
 import com.example.classroom_service.util.ClassroomUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +31,8 @@ import java.util.Optional;
 public class ClassroomServiceImpl implements ClassroomService {
     ClassroomRepository classroomRepository;
     ClassroomMapper classroomMapper;
+    ClassroomDetailRepository classroomDetailRepository;
+
     @Override
     public ClassroomResponse createClassroom(ClassroomCreateRequest request) {
         Classroom classroom = classroomMapper.toClassroom(request);
@@ -78,4 +85,5 @@ public class ClassroomServiceImpl implements ClassroomService {
         Page<Classroom> classrooms = classroomRepository.findByTeacherUsername(username, pageable);
         return classrooms.map(classroomMapper::toClassroomResponse);
     }
+
 }

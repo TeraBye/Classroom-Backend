@@ -19,4 +19,5 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {
 
     @Query("SELECT c FROM Classroom c WHERE c.teacherUsername = :username")
     Page<Classroom> findByTeacherUsername(@Param("username") String username, Pageable pageable);
+
 }
