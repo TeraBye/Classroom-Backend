@@ -15,11 +15,9 @@ import java.time.LocalDateTime;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AssignmentCreateRequest {
-    @NotNull(message = "File is required")
-    MultipartFile file;
 
-//    @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
-//    LocalDateTime deadline;
+    String fileUrl;
+
     String deadline;
 
     String name;

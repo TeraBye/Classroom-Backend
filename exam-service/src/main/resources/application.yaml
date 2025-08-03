@@ -1,0 +1,20 @@
+server:
+  port: 8088
+  servlet:
+    context-path: /api/exam
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/exam_service"
+    username: root
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+app:
+  services:
+    profile: http://localhost:8081/api/profile
+    question: http://localhost:8086/api/questions
+

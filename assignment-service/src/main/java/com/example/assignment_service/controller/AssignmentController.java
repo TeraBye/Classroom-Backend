@@ -3,6 +3,7 @@ package com.example.assignment_service.controller;
 import com.example.assignment_service.dto.request.AssignmentCreateRequest;
 import com.example.assignment_service.dto.request.AssignmentSubmitRequest;
 import com.example.assignment_service.dto.request.AssignmentUpdateRequest;
+import com.example.assignment_service.dto.request.ListIdRequest;
 import com.example.assignment_service.dto.response.ApiResponse;
 import com.example.assignment_service.dto.response.AssignmentDetailResponse;
 import com.example.assignment_service.dto.response.AssignmentResponse;
@@ -25,8 +26,8 @@ import java.util.List;
 public class AssignmentController {
     AssignmentService assignmentService;
 
-    @PostMapping(value = "/create", consumes = {"multipart/form-data"})
-    public ApiResponse<AssignmentResponse> createAssignment(@Valid @ModelAttribute AssignmentCreateRequest request) throws GeneralSecurityException, IOException {
+    @PostMapping(value = "/create")
+    public ApiResponse<AssignmentResponse> createAssignment(@Valid @RequestBody AssignmentCreateRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentResponse>builder()
                 .result(assignmentService.createAssignment(request))
                 .build();
@@ -59,6 +60,15 @@ public class AssignmentController {
         return ApiResponse.<Void>builder()
                 .message("Delete assignment successfully")
                 .build();
+    }
+
+    @PostMapping("/getAssignmentsByListId")
+    public ApiResponse<List<AssignmentResponse>> getAssignmentsByListId(
+            @RequestBody ListIdRequest request) {
+        return ApiResponse.<List<AssignmentResponse>>builder()
+                .result(assignmentService.getAssignmentsByIds(request))
+                .build();
+
     }
 
     @PostMapping(value = "/submit", consumes = {"multipart/form-data"})

@@ -8,6 +8,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,4 +32,5 @@ public interface UserProfileRepository extends Neo4jRepository<UserProfile, Stri
                     "RETURN count(up)"
     )
     Page<UserProfile> searchUsers(@Param("q") String q, Pageable pageable);
+
 }
