@@ -50,4 +50,14 @@ public class ExamController {
                 .build();
 
     }
+
+    @GetMapping("/getExamSubmission")
+    public ApiResponse<ExamSubmissionViewResponse> getExamSubmission(
+            @RequestParam String student,
+            @RequestParam Long examId
+    ){
+        return ApiResponse.<ExamSubmissionViewResponse>builder()
+                .result(examSubmissionService.getExamSubmission(student, examId))
+                .build();
+    }
 }

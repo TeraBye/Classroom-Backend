@@ -50,6 +50,8 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
         examSubmission.setExam(examRepository.findById(request.getExamId()).orElse(null));
         examSubmission =  examSubmissionRepository.save(examSubmission);
 
+        ExamSubmissionResponse examSubmissionResponse = examSubmissionMapper.toExamSubmissionResponse(examSubmission);
+
         List<Integer>questionIds = createSubmissionAnswers(
                 examQuestionRepository.findByExamId(request.getExamId()), examSubmission
         );
@@ -61,7 +63,7 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
         ).getResult();
 
         return ExamSubmissionViewResponse.builder()
-                .examSubmission(examSubmission)
+                .examSubmission(examSubmissionResponse)
                 .questionResponses(questionResponses)
                 .build();
     }
@@ -108,6 +110,29 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
         examSubmissionResponse.setNumberOfCorrectAnswers(numberOfCorrectAnswers);
         return examSubmissionResponse;
 
+    }
+
+    @Override
+    public ExamSubmissionViewResponse getExamSubmission(String student, Long examId){
+        ExamSubmission examSubmission = examSubmissionRepository.findByStudentAndExamId(student, examId);
+
+        ExamSubmissionResponse examSubmissionResponse = examSubmissionMapper.toExamSubmissionResponse(examSubmission);
+
+        List<ExamSubmissionAnswer> answers = examAnswerRepository.findAllBySubmissionId(examSubmission.getId());
+
+        List<Integer> questionIds = answers.stream()
+                .map(ExamSubmissionAnswer::getQuestionId)
+                .collect(Collectors.toList());
+
+        List<QuestionResponse> questions = questionClient.getQuestionsByIds(
+                QuestionIdsRequest.builder()
+                        .questionIds(questionIds)
+                        .build()
+        ).getResult();
+        return ExamSubmissionViewResponse.builder()
+                .examSubmission(examSubmissionResponse)
+                .questionResponses(questions)
+                .build();
     }
 
     public int calculateScore(ExamSubmission examSubmission){
