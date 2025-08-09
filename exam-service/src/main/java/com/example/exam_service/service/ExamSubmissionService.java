@@ -9,4 +9,5 @@ public interface ExamSubmissionService {
     ExamSubmissionViewResponse getExamForStudents(ExamSubmissionRequest request);
     void updateSelectedOption(UpdateAnswerRequest request);
     ExamSubmissionResponse updateExamSubmission(String student, Long examId);
+    ExamSubmissionViewResponse getExamSubmission(String student, Long examId);
 }

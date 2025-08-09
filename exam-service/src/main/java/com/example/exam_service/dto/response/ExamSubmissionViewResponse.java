@@ -13,6 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class ExamSubmissionViewResponse {
-    ExamSubmission examSubmission;
+    ExamSubmissionResponse examSubmission;
     List<QuestionResponse> questionResponses;
 }
