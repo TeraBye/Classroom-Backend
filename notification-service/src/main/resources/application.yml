@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: notification-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+
+server:
+  port: 9001
+  address: 0.0.0.0
+  servlet:
+    context-path: /api/notifications
+
+
+firebase:
+  service-account-path: notificationKey.json
+
+app:
+  services:
+    profile: http://localhost:8081/api/profile
+    classroom: http://localhost:8084/api/classrooms
