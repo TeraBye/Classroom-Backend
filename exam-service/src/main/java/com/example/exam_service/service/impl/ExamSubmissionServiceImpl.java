@@ -1,11 +1,10 @@
 package com.example.exam_service.service.impl;
 
 import com.example.exam_service.dto.request.ExamSubmissionRequest;
+import com.example.exam_service.dto.request.ListUsernameRequest;
 import com.example.exam_service.dto.request.QuestionIdsRequest;
 import com.example.exam_service.dto.request.UpdateAnswerRequest;
-import com.example.exam_service.dto.response.ExamSubmissionResponse;
-import com.example.exam_service.dto.response.ExamSubmissionViewResponse;
-import com.example.exam_service.dto.response.QuestionResponse;
+import com.example.exam_service.dto.response.*;
 import com.example.exam_service.entity.ExamQuestion;
 import com.example.exam_service.entity.ExamSubmission;
 import com.example.exam_service.entity.ExamSubmissionAnswer;
@@ -14,6 +13,7 @@ import com.example.exam_service.repository.ExamAnswerRepository;
 import com.example.exam_service.repository.ExamQuestionRepository;
 import com.example.exam_service.repository.ExamRepository;
 import com.example.exam_service.repository.ExamSubmissionRepository;
+import com.example.exam_service.repository.httpClient.ProfileClient;
 import com.example.exam_service.repository.httpClient.QuestionClient;
 import com.example.exam_service.service.ExamSubmissionService;
 import jakarta.persistence.EntityNotFoundException;
@@ -42,6 +42,7 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
     ExamAnswerRepository examAnswerRepository;
     ExamSubmissionMapper examSubmissionMapper;
     private final QuestionClient questionClient;
+    ProfileClient profileClient;
 
     @Override
     public ExamSubmissionViewResponse getExamForStudents(ExamSubmissionRequest request){
@@ -115,6 +116,17 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
     @Override
     public ExamSubmissionViewResponse getExamSubmission(String student, Long examId){
         ExamSubmission examSubmission = examSubmissionRepository.findByStudentAndExamId(student, examId);
+        if(examSubmission == null) {
+            return getExamForStudents(
+                    ExamSubmissionRequest.builder()
+                            .student(student)
+                            .examId(examId)
+                            .startedAt(LocalDateTime.now())
+                            .submittedAt(null)
+                            .score(null)
+                            .build()
+            );
+        }
 
         ExamSubmissionResponse examSubmissionResponse = examSubmissionMapper.toExamSubmissionResponse(examSubmission);
 
@@ -133,6 +145,74 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
                 .examSubmission(examSubmissionResponse)
                 .questionResponses(questions)
                 .build();
+    }
+
+    @Override
+    public List<ExamSubmissionResponse> getExamsByClass(Long examId) {
+        List<ExamSubmission> exams = examSubmissionRepository.findByExam_Id(examId);
+
+        List<String> usernames = exams.stream()
+                .map(ExamSubmission::getStudent)
+                .collect(Collectors.toList());
+
+        List<ExamSubmissionResponse> examSubmissionResponses = examSubmissionMapper
+                .toExamSubmissionsResponse(exams);
+
+        List<UserProfileResponse> users = profileClient.getListUser(
+                ListUsernameRequest.builder()
+                        .listUsername(usernames)
+                        .build()
+        ).getResult();
+        Map<String, String> usernameToFullName = users.stream()
+                .collect(Collectors.toMap(UserProfileResponse::getUsername, UserProfileResponse::getFullName));
+        examSubmissionResponses.forEach(resp -> {
+            String fullName = usernameToFullName.get(resp.getStudent());
+            resp.setFullName(fullName);
+        });
+        return examSubmissionResponses;
+    }
+
+    @Override
+    public FinalStudentExamViewResponse getStudentAnswer(String student,  Long examId) {
+        ExamSubmission examSubmission = examSubmissionRepository.findByStudentAndExamId(student, examId);
+
+        ExamSubmissionResponse examSubmissionResponse = examSubmissionMapper
+                .toExamSubmissionResponse(examSubmission);
+
+        List<ExamSubmissionAnswer> answers = examAnswerRepository.findAllBySubmissionId(examSubmission.getId());
+
+        List<Integer> questionIds = answers.stream()
+                .map(ExamSubmissionAnswer::getQuestionId)
+                .toList();
+
+        List<QuestionResponse> questions = questionClient.getQuestionsByIds(
+                QuestionIdsRequest.builder().questionIds(questionIds).build()
+        ).getResult();
+
+        Map<Integer, QuestionResponse> questionMap = questions.stream()
+                .collect(Collectors.toMap(QuestionResponse::getId, q -> q));
+
+        List<AnswerResponse> responseList = answers.stream()
+                .map(ans -> examSubmissionMapper.toAnswerResponse(ans, questionMap.get(ans.getQuestionId())))
+                .toList();
+
+        return FinalStudentExamViewResponse.builder()
+                .examSubmission(examSubmissionResponse)
+                .answers(responseList)
+                .build();
+    }
+
+    @Override
+    public ProblemExamCheck isProblemExam(String student, Long examId) {
+        ExamSubmission examSubmission = examSubmissionRepository.findByStudentAndExamId(student, examId);
+
+        ProblemExamCheck result = new ProblemExamCheck();
+        if (examSubmission == null) {
+            result.setIsProblemExam(true);
+        } else {
+            result.setIsProblemExam(examSubmission.getScore() == null);
+        }
+        return result;
     }
 
     public int calculateScore(ExamSubmission examSubmission){

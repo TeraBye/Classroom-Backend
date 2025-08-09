@@ -11,4 +11,5 @@ import java.util.List;
 public interface ExamService {
     ExamViewResponse createExam(ExamCreationRequest request);
     void createExamQuestions(Exam exam, List<QuestionResponse> questionList);
+    List<ExamResponse> getExamsByClass(int classId);
 }
