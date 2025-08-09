@@ -26,7 +26,7 @@ public class ExamResponse {
 
     private String teacher;
 
-    private String classId;
+    private int classId;
 
-    private String subjectId;
+    private int subjectId;
 }

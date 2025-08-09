@@ -1,6 +1,6 @@
 package com.example.exam_service.dto.response;
 
-import com.example.exam_service.entity.Exam;
+import com.example.exam_service.entity.ExamSubmission;
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -10,24 +10,26 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ExamSubmissionResponse {
+public class AnswerResponse {
+    // dưới này của answer
     private Long id;
+    private int questionId;
+    private String selectedOption;
 
-    private String student;
+    //Dưới này của question
+    private String content;
 
-    private LocalDateTime startedAt;
+    private String optionA;
 
-    private LocalDateTime submittedAt;
+    private String optionB;
 
-    private Float score;
+    private String optionC;
 
-    private Integer numberOfCorrectAnswers;
+    private String optionD;
 
-    private String fullName;
+    private String correctAnswer;
 }

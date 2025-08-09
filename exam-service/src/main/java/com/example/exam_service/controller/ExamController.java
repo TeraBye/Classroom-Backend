@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -60,4 +62,43 @@ public class ExamController {
                 .result(examSubmissionService.getExamSubmission(student, examId))
                 .build();
     }
+
+    @GetMapping("/getExamsByExamId")
+    public ApiResponse<List<ExamSubmissionResponse>> getExamsByClass(
+            @RequestParam Long examId
+    ){
+        return ApiResponse.<List<ExamSubmissionResponse>>builder()
+                .result(examSubmissionService.getExamsByClass(examId))
+                .build();
+    }
+
+    @GetMapping("/getExamsByClass")
+    public ApiResponse<List<ExamResponse>> getExamsByClass(
+            @RequestParam int classId
+    ){
+        return ApiResponse.<List<ExamResponse>>builder()
+                .result(examService.getExamsByClass(classId))
+                .build();
+    }
+
+    @GetMapping("/getStudentAnswer")
+    public ApiResponse<FinalStudentExamViewResponse> getStudentAnswer(
+            @RequestParam String student,
+            @RequestParam Long examId
+    ){
+        return ApiResponse.<FinalStudentExamViewResponse>builder()
+                .result(examSubmissionService.getStudentAnswer(student, examId))
+                .build();
+    }
+
+    @GetMapping("/isProblemExam")
+    public ApiResponse<ProblemExamCheck> isProblemExam(
+            @RequestParam String student,
+            @RequestParam Long examId
+    ){
+        return ApiResponse.<ProblemExamCheck>builder()
+                .result(examSubmissionService.isProblemExam(student, examId))
+                .build();
+    }
+
 }

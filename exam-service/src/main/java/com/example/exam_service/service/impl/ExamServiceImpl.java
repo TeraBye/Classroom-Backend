@@ -73,6 +73,12 @@ public class ExamServiceImpl implements ExamService {
         examQuestionRepository.saveAll(examQuestions);
     }
 
+    @Override
+    public List<ExamResponse> getExamsByClass(int classId) {
+        List<Exam> exams = examRepository.findExamByClassId(classId);
+        return examMapper.toExamResponseList(exams);
+    }
+
 
 
 }
