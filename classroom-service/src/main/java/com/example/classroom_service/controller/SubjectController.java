@@ -57,4 +57,13 @@ public class SubjectController {
                 .build();
     }
 
+    @PostMapping("/get-list-subjects")
+    public ApiResponse<List<SubjectResponse>> getListSubject(
+            @RequestBody List<Integer> listSubjectId
+    ) {
+        return ApiResponse.<List<SubjectResponse>>builder()
+                .result(subjectService.getListSubjectsById(listSubjectId))
+                .build();
+    }
+
 }

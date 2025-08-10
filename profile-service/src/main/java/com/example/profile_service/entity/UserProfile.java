@@ -16,6 +16,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 public class UserProfile {
+    private static final String DEFAULT_AVATAR =
+            "https://i.pinimg.com/736x/6e/59/95/6e599501252c23bcf02658617b29c894.jpg";
+
     @Id
     @GeneratedValue(generatorClass =  UUIDStringGenerator.class)
     private String id;
@@ -33,5 +36,5 @@ public class UserProfile {
 
     private LocalDate dob;
 
-    private String avatar;
+    private String avatar = DEFAULT_AVATAR;
 }
