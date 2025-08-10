@@ -13,10 +13,12 @@ import com.example.assignment_service.mapper.AssignmentMapper;
 import com.example.assignment_service.repository.AssignmentDetailRepository;
 import com.example.assignment_service.repository.AssignmentRepository;
 import com.example.assignment_service.service.AssignmentService;
-import com.example.assignment_service.service.FileStorageService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -25,10 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,7 +39,6 @@ public class AssignmentServiceImpl implements AssignmentService {
     AssignmentMapper assignmentMapper;
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd:MM:yyyy");
-    FileStorageService fileStorageService;
     AssignmentDetailRepository assignmentDetailRepository;
     AssignmentDetailMapper assignmentDetailMapper;
 
@@ -125,7 +124,6 @@ public class AssignmentServiceImpl implements AssignmentService {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
         if (assignment.getFileUrl() != null) {
-            fileStorageService.deleteFile(assignment.getFileUrl());
         }
         assignmentRepository.deleteById(assignmentId);
     }
@@ -150,6 +148,18 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignmentDetail = assignmentDetailRepository.save(assignmentDetail);
 
         return assignmentDetailMapper.toAssignmentResponse(assignmentDetail);
+    }
+
+    @Override
+    public Page<AssignmentDetailResponse> getSubmissionsByAssignment(Integer assignmentId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AssignmentDetail> assignmentDetails = assignmentDetailRepository.findByAssignment_Id(assignmentId, pageable);
+        return assignmentDetails.map(assignmentDetailMapper::toAssignmentResponse);
+    }
+
+    @Override
+    public boolean checkSubmission(Integer assignmentId, String studentUsername) {
+        return assignmentDetailRepository.existsByAssignment_IdAndStudentUsername(assignmentId, studentUsername);
     }
 
     @Override
