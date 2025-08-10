@@ -99,6 +99,11 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
                 .orElseThrow(() -> new EntityNotFoundException("Answer not found"));
 
         answer.setSelectedOption(request.getSelectedOption());
+        ExamSubmission examSubmission = examSubmissionRepository
+                .findById(request.getExamSubmissionId()).orElse(null);
+        assert examSubmission != null;
+        examSubmission.setSubmittedAt(LocalDateTime.now());
+        examSubmissionRepository.save(examSubmission);
         examAnswerRepository.save(answer);
     }
 
@@ -176,8 +181,29 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
     public FinalStudentExamViewResponse getStudentAnswer(String student,  Long examId) {
         ExamSubmission examSubmission = examSubmissionRepository.findByStudentAndExamId(student, examId);
 
+        if(examSubmission == null) {
+            ExamSubmissionRequest request = ExamSubmissionRequest.builder()
+                    .student(student)
+                    .examId(examId)
+                    .startedAt(LocalDateTime.now())
+                    .submittedAt(null)
+                    .score(null)
+                    .build();
+
+            examSubmission =
+                    examSubmissionMapper.toExamSubmission(request);
+            examSubmission.setExam(examRepository.findById(request.getExamId()).orElse(null));
+            examSubmission =  examSubmissionRepository.save(examSubmission);
+
+            List<Integer>questionIds = createSubmissionAnswers(
+                    examQuestionRepository.findByExamId(request.getExamId()), examSubmission
+            );
+        }
+
         ExamSubmissionResponse examSubmissionResponse = examSubmissionMapper
                 .toExamSubmissionResponse(examSubmission);
+
+        examSubmissionResponse.setDuration(examSubmission.getExam().getDuration());
 
         List<ExamSubmissionAnswer> answers = examAnswerRepository.findAllBySubmissionId(examSubmission.getId());
 
