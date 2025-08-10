@@ -33,17 +33,23 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public UserConversationResponse createConversation(ConversationCreationRequest request){
+        Conversation conversation = conversationRepository
+                .findBySenderUsernameAndReceiverUsername(request.getSenderUsername(), request.getReceiverUsername())
+                .orElse(null);
         UserProfileResponse userProfileResponse
                 = profileClient.getUserProfileByUsername(
-                        request.getReceiverUsername()).getResult();
+                request.getReceiverUsername()).getResult();
+        if(conversation == null){
+            UserConversationResponse obj =  conversationMapper
+                    .toUserConversationResponse(request, userProfileResponse);
 
-        UserConversationResponse obj =  conversationMapper
+            conversation = conversationRepository
+                    .save(conversationMapper.toConversation(request));
+            obj.setConver_id(conversation.getId());
+            return obj;
+        }
+        return conversationMapper
                 .toUserConversationResponse(request, userProfileResponse);
-
-        Conversation conversation = conversationRepository
-                .save(conversationMapper.toConversation(request));
-        obj.setConver_id(conversation.getId());
-        return obj;
     }
 
     @Override
