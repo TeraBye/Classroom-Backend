@@ -8,11 +8,12 @@ import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface QuestionMapper {
     Question toQuestion(QuestionCreateRequest request);
 
     QuestionResponse toQuestionResponse(Question question);
     List<QuestionResponse> toQuestionResponses(List<Question> questions);
+    @Mapping(target = "id", ignore = true)
     void updateQuestion(QuestionUpdateRequest request, @MappingTarget Question question);
 }
