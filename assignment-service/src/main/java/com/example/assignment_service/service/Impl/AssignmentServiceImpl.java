@@ -16,6 +16,9 @@ import com.example.assignment_service.service.AssignmentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -146,6 +149,18 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignmentDetail = assignmentDetailRepository.save(assignmentDetail);
 
         return assignmentDetailMapper.toAssignmentResponse(assignmentDetail);
+    }
+
+    @Override
+    public Page<AssignmentDetailResponse> getSubmissionsByAssignment(Integer assignmentId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<AssignmentDetail> assignmentDetails = assignmentDetailRepository.findByAssignment_Id(assignmentId, pageable);
+        return assignmentDetails.map(assignmentDetailMapper::toAssignmentResponse);
+    }
+
+    @Override
+    public boolean checkSubmission(Integer assignmentId, String studentUsername) {
+        return assignmentDetailRepository.existsByAssignment_IdAndStudentUsername(assignmentId, studentUsername);
     }
 
     @Override
