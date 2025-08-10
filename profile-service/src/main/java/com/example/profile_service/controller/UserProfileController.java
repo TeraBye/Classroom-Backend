@@ -47,6 +47,7 @@ public class UserProfileController {
                 .build();
     }
 
+
     @DeleteMapping("/{username}")
     public ApiResponse<String> deleteUserProfile(@PathVariable String username){
         userProfileService.deleteUserProfile(username);

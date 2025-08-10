@@ -7,6 +7,7 @@ import com.example.classroom_service.dto.request.StudentRemoveRequest;
 import com.example.classroom_service.dto.response.StudentResponse;
 import com.example.classroom_service.dto.response.ApiResponse;
 import com.example.classroom_service.dto.response.ClassroomResponse;
+import com.example.classroom_service.dto.response.UserProfileResponse;
 import com.example.classroom_service.service.ClassroomDetailService;
 import com.example.classroom_service.service.ClassroomService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -105,6 +106,23 @@ public class ClassroomController {
 
         return ApiResponse.<Page<StudentResponse>>builder()
                 .result(classroomDetailService.findStudentClasses(username,page,size))
+                .build();
+    }
+
+    @GetMapping("/{classroomId}/students-of-class")
+    public ApiResponse<Page<UserProfileResponse>> getStudentsOfClass(
+            @PathVariable int classroomId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+        return ApiResponse.<Page<UserProfileResponse>>builder()
+                .result(classroomDetailService.getStudentsOfClass(classroomId, page, size))
+                .build();
+    }
+
+    @GetMapping("/get-student-usernames/{classroomId}")
+    public ApiResponse<List<String>> findStudentUsernamesByClassroomId(@PathVariable int classroomId) {
+        return ApiResponse.<List<String>>builder()
+                .result(classroomDetailService.findStudentUsernamesByClassroomId(classroomId))
                 .build();
     }
 }
