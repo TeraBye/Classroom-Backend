@@ -30,5 +30,8 @@ public class ExamSubmission {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
+    @Column(name = "exam_time")
+    private Integer examTime = 0; //tính theo giây
+
     private Float score;
 }

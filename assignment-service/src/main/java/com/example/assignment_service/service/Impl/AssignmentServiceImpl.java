@@ -123,8 +123,9 @@ public class AssignmentServiceImpl implements AssignmentService {
     public void deleteAssignment(int assignmentId) throws GeneralSecurityException, IOException {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
-        if (assignment.getFileUrl() != null) {
-        }
+//        if (assignment.getFileUrl() != null) {
+//            fileStorageService.deleteFile(assignment.getFileUrl());
+//        }
         assignmentRepository.deleteById(assignmentId);
     }
 

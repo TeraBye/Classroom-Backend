@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="api-gateway" />
       </profile>
+
       <profile name="Annotation profile for profile-service" enabled="true">
 
         <sourceOutputDir name="target/generated-sources/annotations" />
