@@ -14,6 +14,7 @@ import com.example.question_service.enums.Level;
 import com.example.question_service.exception.BusinessException;
 import com.example.question_service.mapper.QuestionMapper;
 import com.example.question_service.repository.QuestionRepository;
+import com.example.question_service.service.QuestionHistoryService;
 import com.example.question_service.repository.http.ClassroomClient;
 import com.example.question_service.service.QuestionHistoryService;
 import com.example.question_service.service.QuestionService;
@@ -28,6 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.*;
 
 @Service
@@ -36,22 +40,19 @@ import java.util.*;
 public class QuestionServiceImpl implements QuestionService {
     QuestionRepository questionRepository;
     QuestionMapper questionMapper;
-    ClassroomClient classroomClient;
     QuestionHistoryService questionHistoryService;
     ObjectMapper objectMapper;
+    ClassroomClient classroomClient;
 
     @Override
     @Transactional
     public QuestionResponse createQuestion(QuestionCreateRequest request) {
-        if (!questionRepository.existsByContentIgnoreCase(request.getContent())) {
-            Question question = questionMapper.toQuestion(request);
-            question.setCreatedAt(LocalDateTime.now());
-            questionHistoryService.pushAction(request.getUsername(),
-                    new QuestionAction(ActionType.CREATE, null, question));
-            return questionMapper.toQuestionResponse(questionRepository.save(question));
-        } else {
-            throw new RuntimeException("Question existed");
-        }
+        Question question = questionMapper.toQuestion(request);
+        question.setCreatedAt(LocalDateTime.now());
+
+        questionHistoryService.pushAction(request.getUsername(), new QuestionAction(ActionType.CREATE, null, question));
+        return questionMapper.toQuestionResponse(questionRepository.save(question));
+
     }
 
     @Override
@@ -63,7 +64,8 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public List<QuestionResponse> getAllQuestions() {
-        return questionMapper.toQuestionResponses(questionRepository.findAll());
+        List<Question> questions = questionRepository.findAll();
+        return questionMapper.toQuestionResponses(questions);
     }
 
     @Override
@@ -74,21 +76,31 @@ public class QuestionServiceImpl implements QuestionService {
 
         Question before = objectMapper.readValue(objectMapper.writeValueAsString(existing), Question.class);
         questionMapper.updateQuestion(request, existing);
+//        existing.setContent(request.getContent());
+//        existing.setOptionA(request.getOptionA());
+//        existing.setOptionB(request.getOptionB());
+//        existing.setOptionC(request.getOptionC());
+//        existing.setOptionD(request.getOptionD());
+//        existing.setCorrectAnswer(request.getCorrectAnswer());
+//        existing.setExplanation(request.getExplanation());
+//        existing.setLevel(request.getLevel());
+//        existing.setUsername(request.getUsername());
+//        existing.setSubjectId(request.getSubjectId());
+
         existing.setUpdatedAt(LocalDateTime.now());
 
-        questionHistoryService.pushAction(request.getUsername(),
-                new QuestionAction(ActionType.UPDATE, before, existing));
+        questionHistoryService.pushAction(request.getUsername(), new QuestionAction(ActionType.UPDATE, before, existing));
         return questionMapper.toQuestionResponse(questionRepository.save(existing));
     }
 
     @Override
     @Transactional
-    public void deleteQuestion(int questionId) {
+    public void deleteQuestion(int questionId, String username) {
         Question before = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
+
         questionRepository.deleteById(questionId);
-        questionHistoryService.pushAction("system",
-                new QuestionAction(ActionType.DELETE, before, null));
+        questionHistoryService.pushAction(username, new QuestionAction(ActionType.DELETE, before, null));
     }
 
     @Override
@@ -108,8 +120,17 @@ public class QuestionServiceImpl implements QuestionService {
                 Question before = action.getBefore();
                 Question existing = questionRepository.findById(before.getId())
                         .orElseThrow(() -> new RuntimeException("Cannot undo update: entity missing"));
-                questionMapper.updateQuestion(questionMapper.toUpdateRequest(before), existing);
+                existing.setContent(before.getContent());
+                existing.setOptionA(before.getOptionA());
+                existing.setOptionB(before.getOptionB());
+                existing.setOptionC(before.getOptionC());
+                existing.setOptionD(before.getOptionD());
+                existing.setCorrectAnswer(before.getCorrectAnswer());
+                existing.setExplanation(before.getExplanation());
+                existing.setLevel(before.getLevel());
                 existing.setUpdatedAt(LocalDateTime.now());
+                existing.setUsername(before.getUsername());
+                existing.setSubjectId(before.getSubjectId());
                 questionRepository.save(existing);
             }
             case DELETE -> {
@@ -137,8 +158,17 @@ public class QuestionServiceImpl implements QuestionService {
                 Question after = action.getAfter();
                 Question existing = questionRepository.findById(after.getId())
                         .orElseThrow(() -> new RuntimeException("Cannot redo update: entity missing"));
-                questionMapper.updateQuestion(questionMapper.toUpdateRequest(after), existing);
+                existing.setContent(after.getContent());
+                existing.setOptionA(after.getOptionA());
+                existing.setOptionB(after.getOptionB());
+                existing.setOptionC(after.getOptionC());
+                existing.setOptionD(after.getOptionD());
+                existing.setCorrectAnswer(after.getCorrectAnswer());
+                existing.setExplanation(after.getExplanation());
+                existing.setLevel(after.getLevel());
                 existing.setUpdatedAt(LocalDateTime.now());
+                existing.setUsername(after.getUsername());
+                existing.setSubjectId(after.getSubjectId());
                 questionRepository.save(existing);
             }
             case DELETE -> {
@@ -153,7 +183,8 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public List<QuestionResponse> getQuestionsBySubjectId(int subjectId) {
-        return questionMapper.toQuestionResponses(questionRepository.findBySubjectId(subjectId));
+        List<Question> questions = questionRepository.findBySubjectId(subjectId);
+        return questionMapper.toQuestionResponses(questions);
     }
 
     @Override
@@ -192,31 +223,36 @@ public class QuestionServiceImpl implements QuestionService {
         throw new BusinessException("Can not find any subject!");
     }
 
+    //Luan lam
     @Override
-    public List<QuestionResponse> getRandomQuestionsBySubject(Integer subjectId, int n) {
-        int minHard = (int) Math.ceil(n * 0.2);
-        int maxEasy = (int) Math.floor(n * 0.3);
-        int remaining = n - minHard;
-        int maxMedium = remaining - maxEasy;
+    public List<QuestionResponse> getRandomQuestionsBySubject(Integer subjectId, int n) throws IllegalStateException {
+        // Tính số lượng câu hỏi HARD và EASY
+        int minHard = (int) Math.ceil(n * 0.2); // Ít nhất 20% là HARD
+        int maxEasy = (int) Math.floor(n * 0.3); // Nhiều nhất 30% là EASY
+        int remaining = n - minHard; // Số câu hỏi còn lại (EASY + MEDIUM)
+        int maxMedium = remaining - maxEasy; // Số câu MEDIUM tối đa
 
+        // Kiểm tra số lượng câu hỏi có sẵn trong cơ sở dữ liệu
         long availableHard = questionRepository.countBySubjectIdAndLevel(subjectId, Level.HARD);
         long availableEasy = questionRepository.countBySubjectIdAndLevel(subjectId, Level.EASY);
         long availableMedium = questionRepository.countBySubjectIdAndLevel(subjectId, Level.MEDIUM);
 
+        // Kiểm tra điều kiện
         if (availableHard < minHard) {
             throw new IllegalStateException("Không đủ câu hỏi HARD: Cần ít nhất " + minHard + ", chỉ có " + availableHard);
         }
-        if (availableEasy < 1 && maxEasy > 0) {
+        if (availableEasy < 1 && maxEasy > 0) { // Nếu maxEasy > 0 nhưng không có EASY
             throw new IllegalStateException("Không đủ câu hỏi EASY: Cần ít nhất 1, chỉ có " + availableEasy);
         }
         if (availableMedium < (n - minHard - Math.min(availableEasy, maxEasy))) {
-            throw new IllegalStateException("Không đủ câu hỏi MEDIUM: Cần ít nhất " +
-                    (n - minHard - Math.min(availableEasy, maxEasy)) + ", chỉ có " + availableMedium);
+            throw new IllegalStateException("Không đủ câu hỏi MEDIUM: Cần ít nhất " + (n - minHard - Math.min(availableEasy, maxEasy)) + ", chỉ có " + availableMedium);
         }
 
+        // Lấy số câu EASY (tối đa maxEasy, nhưng không vượt quá availableEasy)
         int easyCount = Math.min(maxEasy, (int) availableEasy);
-        int mediumCount = n - minHard - easyCount;
+        int mediumCount = n - minHard - easyCount; // Số câu MEDIUM cần lấy
 
+        // Lấy câu hỏi ngẫu nhiên
         List<Question> questions = new ArrayList<>();
         questions.addAll(questionRepository.findRandomBySubjectIdAndLevel(subjectId, Level.HARD, PageRequest.of(0, minHard)));
         if (easyCount > 0) {
@@ -225,11 +261,14 @@ public class QuestionServiceImpl implements QuestionService {
         if (mediumCount > 0) {
             questions.addAll(questionRepository.findRandomBySubjectIdAndLevel(subjectId, Level.MEDIUM, PageRequest.of(0, mediumCount)));
         }
+
         return questionMapper.toQuestionResponses(questions);
     }
 
     @Override
     public List<QuestionResponse> getQuestionByIds(QuestionIdsRequest request) {
-        return questionMapper.toQuestionResponses(questionRepository.findByIdIn(request.getQuestionIds()));
+        return questionMapper.toQuestionResponses(
+                questionRepository.findByIdIn(request.getQuestionIds())
+        );
     }
 }
