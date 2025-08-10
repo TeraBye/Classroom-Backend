@@ -4,6 +4,8 @@ import com.example.question_service.dto.request.QuestionCreateRequest;
 import com.example.question_service.dto.request.QuestionIdsRequest;
 import com.example.question_service.dto.request.QuestionUpdateRequest;
 import com.example.question_service.dto.response.ApiResponse;
+import com.example.question_service.dto.response.ClassListResponse;
+import com.example.question_service.dto.response.QuestionPagingResponse;
 import com.example.question_service.dto.response.QuestionResponse;
 import com.example.question_service.service.QuestionHistoryService;
 import com.example.question_service.service.QuestionService;
@@ -12,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -111,5 +115,30 @@ public class QuestionController {
                 .result(questionService.getQuestionByIds(request))
                 .build();
 
+    }
+
+    @GetMapping("/get-list-question")
+    public ApiResponse<QuestionPagingResponse<QuestionResponse>> getListUsers(
+            @RequestParam Integer subjectId,
+            @RequestParam int cursor,
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "15") int size) {
+        Pageable pageable = PageRequest.of(page,size);
+        return ApiResponse.<QuestionPagingResponse<QuestionResponse>>builder()
+                .result(questionService.getPageQuestion(subjectId, cursor, pageable))
+                .build();
+    }
+
+    @GetMapping("get-subjects")
+    public ApiResponse<List<ClassListResponse>> getListSubject(
+            @RequestParam (defaultValue = "-999") Integer subjectId,
+            @RequestParam int cursor,
+            @RequestParam (defaultValue = "0") int page,
+            @RequestParam (defaultValue = "15") int size
+    ){
+        Pageable pageable = PageRequest.of(page,size);
+
+        return ApiResponse.<List<ClassListResponse>>builder()
+                .result(questionService.getSubjectList(subjectId,cursor,pageable)).build();
     }
 }

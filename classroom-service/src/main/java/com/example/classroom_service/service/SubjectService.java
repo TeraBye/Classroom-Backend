@@ -12,4 +12,6 @@ public interface SubjectService {
     List<SubjectResponse> getAllSubjects();
     SubjectResponse updateSubject(int subjectId, SubjectUpdateRequest request);
     void deleteSubject(int subjectId);
+
+    List<SubjectResponse> getListSubjectsById(List<Integer> listSubjectId);
 }

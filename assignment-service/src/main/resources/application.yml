@@ -12,11 +12,3 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-
-cloudinary:
-  cloud:
-    name: dvnqcio6h
-  api:
-    key: 511958648376181
-    secret: l9KYs3TXQIGMZaZkwuktyWmLEUQ
-  folder: assignment-submissions
