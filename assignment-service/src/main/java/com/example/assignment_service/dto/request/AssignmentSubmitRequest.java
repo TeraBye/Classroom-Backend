@@ -20,8 +20,7 @@ public class AssignmentSubmitRequest {
 
     @NotNull(message = "Student username is required")
     String studentUsername;
-
-    @NotNull(message = "File is required")
-    MultipartFile file;
+    String note;
+    String fileUrl;
 
 }

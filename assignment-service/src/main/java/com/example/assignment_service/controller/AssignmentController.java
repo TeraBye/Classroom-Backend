@@ -47,7 +47,7 @@ public class AssignmentController {
                 .build();
     }
 
-    @PutMapping(value = "/{assignmentId}", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/{assignmentId}")
     public ApiResponse<AssignmentResponse> updateAssignment(@PathVariable int assignmentId, @RequestBody AssignmentUpdateRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentResponse>builder()
                 .result(assignmentService.updateAssignment(assignmentId, request))
@@ -71,10 +71,10 @@ public class AssignmentController {
 
     }
 
-    @PostMapping(value = "/submit", consumes = {"multipart/form-data"})
+    @PostMapping("/submit")
     public ApiResponse<AssignmentDetailResponse> submitAssignment(
 //            @ModelAttribute được sử dụng khi gửi dữ liệu dạng multipart/form-data
-            @Valid @ModelAttribute AssignmentSubmitRequest request) throws GeneralSecurityException, IOException {
+            @Valid @RequestBody AssignmentSubmitRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentDetailResponse>builder()
                 .result(assignmentService.submitAssignment(request))
                 .build();
