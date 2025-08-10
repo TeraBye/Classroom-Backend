@@ -30,4 +30,8 @@ public class ExamSubmissionResponse {
     private Integer numberOfCorrectAnswers;
 
     private String fullName;
+
+    private int duration;
+
+    private Integer examTime;
 }

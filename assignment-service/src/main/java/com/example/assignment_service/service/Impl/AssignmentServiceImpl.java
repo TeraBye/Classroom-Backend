@@ -13,7 +13,6 @@ import com.example.assignment_service.mapper.AssignmentMapper;
 import com.example.assignment_service.repository.AssignmentDetailRepository;
 import com.example.assignment_service.repository.AssignmentRepository;
 import com.example.assignment_service.service.AssignmentService;
-import com.example.assignment_service.service.FileStorageService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,10 +24,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,7 +36,6 @@ public class AssignmentServiceImpl implements AssignmentService {
     AssignmentMapper assignmentMapper;
     DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd:MM:yyyy");
-    FileStorageService fileStorageService;
     AssignmentDetailRepository assignmentDetailRepository;
     AssignmentDetailMapper assignmentDetailMapper;
 
@@ -124,9 +120,9 @@ public class AssignmentServiceImpl implements AssignmentService {
     public void deleteAssignment(int assignmentId) throws GeneralSecurityException, IOException {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
-        if (assignment.getFileUrl() != null) {
-            fileStorageService.deleteFile(assignment.getFileUrl());
-        }
+//        if (assignment.getFileUrl() != null) {
+//            fileStorageService.deleteFile(assignment.getFileUrl());
+//        }
         assignmentRepository.deleteById(assignmentId);
     }
 
