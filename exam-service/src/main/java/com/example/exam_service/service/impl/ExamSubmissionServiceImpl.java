@@ -204,7 +204,6 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
                 .toExamSubmissionResponse(examSubmission);
 
         examSubmissionResponse.setDuration(examSubmission.getExam().getDuration());
-
         List<ExamSubmissionAnswer> answers = examAnswerRepository.findAllBySubmissionId(examSubmission.getId());
 
         List<Integer> questionIds = answers.stream()

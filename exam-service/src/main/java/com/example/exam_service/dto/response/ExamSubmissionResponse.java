@@ -32,4 +32,6 @@ public class ExamSubmissionResponse {
     private String fullName;
 
     private int duration;
+
+    private Integer examTime;
 }
