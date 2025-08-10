@@ -103,6 +103,7 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
                 .findById(request.getExamSubmissionId()).orElse(null);
         assert examSubmission != null;
         examSubmission.setSubmittedAt(LocalDateTime.now());
+        examSubmission.setExamTime(request.getExamTime());
         examSubmissionRepository.save(examSubmission);
         examAnswerRepository.save(answer);
     }
@@ -204,6 +205,7 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
                 .toExamSubmissionResponse(examSubmission);
 
         examSubmissionResponse.setDuration(examSubmission.getExam().getDuration());
+
         List<ExamSubmissionAnswer> answers = examAnswerRepository.findAllBySubmissionId(examSubmission.getId());
 
         List<Integer> questionIds = answers.stream()
