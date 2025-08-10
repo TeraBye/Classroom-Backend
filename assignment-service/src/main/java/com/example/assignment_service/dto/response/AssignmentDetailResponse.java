@@ -14,11 +14,11 @@ import java.time.LocalDateTime;
 @Builder
 public class AssignmentDetailResponse {
     Integer id;
-
     Assignment assignment;
-
     @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
     LocalDateTime submitTime;
+
+    String note;
 
     String fileUrl;
 
