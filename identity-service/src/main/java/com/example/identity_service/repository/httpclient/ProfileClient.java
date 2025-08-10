@@ -1,5 +1,6 @@
 package com.example.identity_service.repository.httpclient;
 
+import com.example.identity_service.dto.request.ListUsernameRequest;
 import com.example.identity_service.dto.request.ProfileCreationRequest;
 import com.example.identity_service.dto.response.ApiResponse;
 import com.example.identity_service.dto.response.ProfileClientResponse;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
+
 @FeignClient(name = "profile-service", url = "${app.services.profile}")
 public interface ProfileClient {
     @PostMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -21,4 +24,7 @@ public interface ProfileClient {
     ApiResponse<ProfileClientResponse> getUserProfileByUsername(
             @PathVariable("username") String username);
 
+    @GetMapping(value = "/users/getListUserByListUsername", produces = MediaType.APPLICATION_JSON_VALUE)
+    ApiResponse<List<ProfileClientResponse>> getListUserProfileByUsername(
+            @RequestBody ListUsernameRequest listUsernameRequest);
 }

@@ -141,13 +141,11 @@ public class AssignmentServiceImpl implements AssignmentService {
             throw new IllegalArgumentException("Assignment submission deadline has passed");
         }
 
-        // Upload file lên Google Drive và lấy URL
-        String fileUrl = fileStorageService.uploadFile(request.getFile(), request.getStudentUsername(), Optional.of(request.getAssignmentId()), "STUDENT");
-
         AssignmentDetail assignmentDetail = AssignmentDetail.builder()
                 .assignment(assignment)
                 .submitTime(LocalDateTime.now())
-                .fileUrl(fileUrl)
+                .note(request.getNote())
+                .fileUrl(request.getFileUrl())
                 .studentUsername(request.getStudentUsername())
                 .build();
 
@@ -155,8 +153,6 @@ public class AssignmentServiceImpl implements AssignmentService {
 
         return assignmentDetailMapper.toAssignmentResponse(assignmentDetail);
     }
-
-
 
     @Override
     public List<AssignmentResponse> getAssignmentsByIds(ListIdRequest request){

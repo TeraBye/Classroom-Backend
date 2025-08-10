@@ -9,3 +9,12 @@ spring:
     authentication:
       username: neo4j
       password: 12345678
+
+app:
+  services:
+    identity: http://localhost:8080/api/identity
+
+cloudinary:
+  cloud-name: dacaq64o6
+  api-key: 437197883379755
+  api-secret: HV7alb6Clh4OJJXIoqKy4eWxF40

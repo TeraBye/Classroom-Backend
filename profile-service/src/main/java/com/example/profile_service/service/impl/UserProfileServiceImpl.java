@@ -1,10 +1,13 @@
 package com.example.profile_service.service.impl;
 
-import com.example.profile_service.dto.request.UserProfileCreationRequest;
+import com.example.profile_service.dto.request.*;
 import com.example.profile_service.dto.response.UserProfileResponse;
 import com.example.profile_service.entity.UserProfile;
+import com.example.profile_service.dto.response.AccountResponse;
+import com.example.profile_service.exception.BusinessException;
 import com.example.profile_service.mappper.UserProfileMapper;
 import com.example.profile_service.repository.UserProfileRepository;
+import com.example.profile_service.repository.httpClient.IdentityClient;
 import com.example.profile_service.service.UserProfileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,9 +28,10 @@ import java.util.List;
 public class UserProfileServiceImpl implements UserProfileService {
     UserProfileRepository userProfileRepository;
     UserProfileMapper userProfileMapper;
+    IdentityClient identityClient;
 
     @Override
-    public UserProfileResponse createUserProfile(UserProfileCreationRequest request){
+    public UserProfileResponse createUserProfile(UserProfileCreationRequest request) {
         UserProfile userProfile = userProfileMapper.toUserProfile(request);
         userProfile
                 .setAvatar("https://i.pinimg.com/736x/6e/59/95/6e599501252c23bcf02658617b29c894.jpg");
@@ -36,7 +41,7 @@ public class UserProfileServiceImpl implements UserProfileService {
     }
 
     @Override
-    public List<UserProfileResponse> getAllProfile(){
+    public List<UserProfileResponse> getAllProfile() {
         List<UserProfile> userProfiles = userProfileRepository.findAll();
         return userProfileMapper.toUserProfilesResponse(userProfiles);
     }
@@ -69,5 +74,68 @@ public class UserProfileServiceImpl implements UserProfileService {
         Pageable pageable = PageRequest.of(page, size);
         Page<UserProfile> userProfiles = userProfileRepository.searchUsers(q, pageable);
         return userProfiles.map(userProfileMapper::toUserProfileResponse);
+    }
+
+    @Override
+    public boolean createUser(CreateUserRequest createUserRequest) {
+
+        Optional<UserProfile> userProfileOptional = userProfileRepository.findByUsername(createUserRequest.getUsername());
+        if (userProfileOptional.isPresent()) {
+            throw new BusinessException("User already exist.");
+        }
+
+        AccountRequest accountProfileRequest = new AccountRequest();
+        accountProfileRequest.setUsername(createUserRequest.getUsername());
+        accountProfileRequest.setPassword(createUserRequest.getPassword());
+        accountProfileRequest.setRoles(createUserRequest.getRoles());
+
+        UserProfile userProfile = new UserProfile();
+
+        try {
+            AccountResponse accountInfoResponse = identityClient.createUser(accountProfileRequest).getResult();
+
+            userProfile.setUserId(accountInfoResponse.getUserId());
+            userProfile.setUsername(accountInfoResponse.getUsername());
+            userProfile.setFullName(createUserRequest.getFullName());
+            userProfile.setEmail(createUserRequest.getEmail());
+            userProfile.setDob(createUserRequest.getDob());
+            userProfile.setAvatar("https://i.pinimg.com/736x/6e/59/95/6e599501252c23bcf02658617b29c894.jpg");
+        } catch (Exception ex) {
+            log.error("Feign call failed", ex);
+            throw new RuntimeException("Feign call failed: " + ex.getMessage());
+        }
+
+        try {
+            userProfileRepository.save(userProfile);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Can not create userProfile " + e);
+        }
+        return true;
+    }
+
+    @Override
+    public String updateUser(UpdateUserRequest updateUserRequest) {
+        Optional<UserProfile> userProfileOptional = userProfileRepository.findByUserId(updateUserRequest.getUserId());
+        if (userProfileOptional.isEmpty()) {
+            return "can not find user";
+        }
+        UserProfile userProfile = userProfileOptional.get();
+
+
+        AccountUpdateRequest accountUpdateRequest = new AccountUpdateRequest();
+        accountUpdateRequest.setUserId(userProfile.getUserId());
+        accountUpdateRequest.setUsername(updateUserRequest.getUsername());
+        accountUpdateRequest.setRoles(updateUserRequest.getRoles());
+
+        if (identityClient.updateAccount(accountUpdateRequest).getCode() == 200){
+            userProfile.setUsername(updateUserRequest.getUsername());
+            userProfile.setFullName(updateUserRequest.getFullName());
+            userProfile.setEmail(updateUserRequest.getEmail());
+            userProfile.setDob(updateUserRequest.getDob());
+
+            userProfileRepository.save(userProfile);
+            return "";
+        }
+        return "update account failed!";
     }
 }

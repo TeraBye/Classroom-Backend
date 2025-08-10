@@ -26,6 +26,9 @@ public class AssignmentDetail {
     @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
     private LocalDateTime submitTime;
 
+    @Column(name = "note")
+    private String note;
+
     private String fileUrl;
 
     @Column(name = "student_username")
