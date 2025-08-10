@@ -1,6 +1,5 @@
 package com.example.exam_service.dto.response;
 
-import com.example.exam_service.entity.ExamSubmission;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ExamSubmissionViewResponse {
+public class FinalStudentExamViewResponse {
     ExamSubmissionResponse examSubmission;
-    List<QuestionResponse> questionResponses;
+    List<AnswerResponse> answers;
 }
