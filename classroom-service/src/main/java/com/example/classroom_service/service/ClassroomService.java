@@ -3,6 +3,7 @@ package com.example.classroom_service.service;
 import com.example.classroom_service.dto.request.ClassroomCreateRequest;
 import com.example.classroom_service.dto.request.ClassroomUpdateRequest;
 import com.example.classroom_service.dto.response.ClassroomResponse;
+import com.example.classroom_service.dto.response.SubjectWithClassroomResponse;
 import com.example.classroom_service.dto.response.UserProfileResponse;
 import org.springframework.data.domain.Page;
 
@@ -17,4 +18,5 @@ public interface ClassroomService {
     Page<ClassroomResponse> searchClassrooms(String q, int page, int size);
     Page<ClassroomResponse> findClassroomsByTeacherUsername(String username, int page, int size);
 
+    List<SubjectWithClassroomResponse> getListSubjectsByClassrooms(List<Integer> listClassroomId);
 }

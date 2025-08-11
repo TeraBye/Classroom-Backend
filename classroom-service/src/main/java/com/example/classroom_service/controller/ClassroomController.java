@@ -4,10 +4,7 @@ import com.example.classroom_service.dto.request.StudentAddRequest;
 import com.example.classroom_service.dto.request.ClassroomCreateRequest;
 import com.example.classroom_service.dto.request.ClassroomUpdateRequest;
 import com.example.classroom_service.dto.request.StudentRemoveRequest;
-import com.example.classroom_service.dto.response.StudentResponse;
-import com.example.classroom_service.dto.response.ApiResponse;
-import com.example.classroom_service.dto.response.ClassroomResponse;
-import com.example.classroom_service.dto.response.UserProfileResponse;
+import com.example.classroom_service.dto.response.*;
 import com.example.classroom_service.service.ClassroomDetailService;
 import com.example.classroom_service.service.ClassroomService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -123,6 +120,15 @@ public class ClassroomController {
     public ApiResponse<List<String>> findStudentUsernamesByClassroomId(@PathVariable int classroomId) {
         return ApiResponse.<List<String>>builder()
                 .result(classroomDetailService.findStudentUsernamesByClassroomId(classroomId))
+                .build();
+    }
+
+    @PostMapping("/get-list-subjects-by-classrooms")
+    ApiResponse<List<SubjectWithClassroomResponse>> getListSubjectByClassrooms(
+            @RequestBody List<Integer> listClassroomId
+    ) {
+        return ApiResponse.<List<SubjectWithClassroomResponse>>builder()
+                .result(classroomService.getListSubjectsByClassrooms(listClassroomId))
                 .build();
     }
 }

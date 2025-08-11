@@ -16,21 +16,22 @@ public interface ScoreRepository extends JpaRepository<ScoreDetail, Integer> {
 
     @Query("SELECT s FROM ScoreDetail s WHERE s.classroomId = :classroomId AND s.scoreDetailId > :cursor ORDER BY s.scoreDetailId ASC")
     List<ScoreDetail> findNextPageScore(
-            @Param("classroomId") String classroomId, @Param("cursor") int cursor, Pageable pageable);
+            @Param("classroomId") Integer classroomId, @Param("cursor") int cursor, Pageable pageable);
 
     @Query("SELECT DISTINCT s.classroomId FROM ScoreDetail s WHERE s.classroomId > :cursor ORDER BY s.classroomId ASC")
-    List<String> findNextPageClassScore(
+    List<Integer> findNextPageClassScore(
             @Param("cursor") int cursor, Pageable pageable);
 
-    int countByClassroomId(String classroomId);
+    int countByClassroomId(Integer classroomId);
 
-    @Query("SELECT DISTINCT s.classroomId FROM ScoreDetail s WHERE s.classroomId LIKE %:keyword%")
-    List<String> findDistinctClassroomIdsByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    @Query("SELECT DISTINCT s.classroomId FROM ScoreDetail s WHERE s.classroomId = :keyword")
+    List<Integer> findDistinctClassroomIdsByKeyword(@Param("keyword") Integer keyword, Pageable pageable);
+
 
     List<ScoreDetail> findAllByClassroomIdAndStudentId(
-            String classroomId, int studentId, Pageable pageable);
+            Integer classroomId, int studentId, Pageable pageable);
 
 
     Optional<ScoreDetail> findByClassroomIdAndStudentIdAndTypeofscore(
-            String classroomId, int studentId, TYPEOFSCORE typeofscore);
+            Integer classroomId, int studentId, TYPEOFSCORE typeofscore);
 }

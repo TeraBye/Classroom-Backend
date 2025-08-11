@@ -24,4 +24,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query("SELECT u FROM User u WHERE u.userId = :userId")
     Optional<User> getUserProfileByUserId(@Param("userId") int userId);
+
+    @Query("SELECT u FROM User u " +
+            "WHERE u.userId > :cursor " +
+            "AND u.username LIKE %:username% " +
+            "ORDER BY u.userId ASC")
+    List<User> findNextPageByUsername(@Param("cursor") int cursor,
+                                      @Param("username") String username,
+                                      Pageable pageable);
+
 }

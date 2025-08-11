@@ -20,9 +20,9 @@ public class ScoreDetail {
 
     Float score;
 
-    int studentId;
+    Integer studentId;
 
-    String classroomId;
+    Integer classroomId;
 
     @Enumerated(EnumType.STRING)
     TYPEOFSCORE typeofscore;

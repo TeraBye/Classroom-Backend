@@ -86,12 +86,13 @@ public class UserController {
 
     @GetMapping("/get-list-users")
     public ApiResponse<UserPagingResponse<UserDetailsResponse>> getListUsers(
+            @RequestParam (defaultValue = "") String username,
             @RequestParam int cursor,
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page,size);
         return ApiResponse.<UserPagingResponse<UserDetailsResponse>>builder()
-                .result(userService.getPageUsersProfile(cursor, pageable))
+                .result(userService.getPageUsersProfile(username, cursor, pageable))
                 .build();
     }
 

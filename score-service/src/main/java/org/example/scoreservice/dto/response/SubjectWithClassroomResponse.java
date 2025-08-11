@@ -1,15 +1,16 @@
 package org.example.scoreservice.dto.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
-public class ClassroomResponse {
+@NoArgsConstructor
+public class SubjectWithClassroomResponse {
     Integer classroomId;
-    int total;
-    Integer subjectId;
-    String subjectName;
+
+    Integer id;
+
+    String name;
 }
