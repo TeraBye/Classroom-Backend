@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -47,7 +48,7 @@ public class AssignmentController {
                 .build();
     }
 
-    @PutMapping(value = "/{assignmentId}", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/{assignmentId}")
     public ApiResponse<AssignmentResponse> updateAssignment(@PathVariable int assignmentId, @RequestBody AssignmentUpdateRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentResponse>builder()
                 .result(assignmentService.updateAssignment(assignmentId, request))
@@ -71,12 +72,34 @@ public class AssignmentController {
 
     }
 
-    @PostMapping(value = "/submit", consumes = {"multipart/form-data"})
+    @PostMapping("/submit")
     public ApiResponse<AssignmentDetailResponse> submitAssignment(
 //            @ModelAttribute được sử dụng khi gửi dữ liệu dạng multipart/form-data
-            @Valid @ModelAttribute AssignmentSubmitRequest request) throws GeneralSecurityException, IOException {
+            @Valid @RequestBody AssignmentSubmitRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentDetailResponse>builder()
                 .result(assignmentService.submitAssignment(request))
                 .build();
     }
+
+    @GetMapping("/{assignmentId}/submissions")
+    public ApiResponse<Page<AssignmentDetailResponse>> getSubmissions(
+            @PathVariable Integer assignmentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ApiResponse.<Page<AssignmentDetailResponse>>builder()
+                .result(assignmentService.getSubmissionsByAssignment(assignmentId, page, size))
+                .build();
+    }
+
+    @GetMapping("/{assignmentId}/check-submitted")
+    public ApiResponse<Boolean> checkSubmitted(
+            @PathVariable Integer assignmentId,
+            @RequestParam String studentUsername
+    ) {
+        return ApiResponse.<Boolean>builder()
+                .result(assignmentService.checkSubmission(assignmentId, studentUsername))
+                .build();
+    }
+
 }

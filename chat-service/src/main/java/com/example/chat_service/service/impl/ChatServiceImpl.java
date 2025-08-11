@@ -44,6 +44,11 @@ public class ChatServiceImpl implements ChatService {
                 chatResponse
         );
 
+        messagingTemplate.convertAndSend(
+                "/topic/haveChat",
+                chatResponse
+        );
+
         return chatResponse;
 
     }

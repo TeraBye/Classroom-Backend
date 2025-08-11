@@ -13,4 +13,5 @@ public class UpdateAnswerRequest {
     private Long examSubmissionId;
     private int questionId;
     private String selectedOption;
+    private Integer examTime;
 }
