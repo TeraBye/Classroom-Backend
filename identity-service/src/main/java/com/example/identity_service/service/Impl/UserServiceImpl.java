@@ -4,10 +4,7 @@ import com.example.identity_service.dto.request.*;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.example.identity_service.dto.response.*;
@@ -113,8 +110,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserPagingResponse<UserDetailsResponse> getPageUsersProfile(int cursor, Pageable pageable) {
-        List<User> users = userRepository.findNextPage(cursor, pageable);
+    public UserPagingResponse<UserDetailsResponse> getPageUsersProfile(String username, int cursor, Pageable pageable) {
+        List<User> users;
+        if (username.isEmpty()) {
+            users = userRepository.findNextPage(cursor, pageable);
+        } else {
+            users = userRepository.findNextPageByUsername(cursor, username, pageable);
+        }
+
         List<String> listUsername = users.stream()
                 .map(User::getUsername).toList();
         ListUsernameRequest listUsernameRequest = new ListUsernameRequest(listUsername);
@@ -146,7 +149,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public AccountResponse createNewUser(AccountRequest accountRequest) {
         Optional<User> userOptional = userRepository.findByUsername(accountRequest.getUsername());
-        if (userOptional.isPresent()){
+        if (userOptional.isPresent()) {
             throw new DuplicateKeyException("username already exist");
         }
         User user = new User();

@@ -2,26 +2,25 @@ package com.example.classroom_service.service.Impl;
 
 import com.example.classroom_service.dto.request.ClassroomCreateRequest;
 import com.example.classroom_service.dto.request.ClassroomUpdateRequest;
-import com.example.classroom_service.dto.request.ListUsernameRequest;
 import com.example.classroom_service.dto.response.ClassroomResponse;
-import com.example.classroom_service.dto.response.UserProfileResponse;
+import com.example.classroom_service.dto.response.SubjectWithClassroomResponse;
 import com.example.classroom_service.entity.Classroom;
+import com.example.classroom_service.entity.Subject;
 import com.example.classroom_service.mapper.ClassroomMapper;
 import com.example.classroom_service.repository.ClassroomDetailRepository;
 import com.example.classroom_service.repository.ClassroomRepository;
-import com.example.classroom_service.repository.httpclient.ProfileClient;
 import com.example.classroom_service.service.ClassroomService;
 import com.example.classroom_service.util.ClassroomUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -84,6 +83,18 @@ public class ClassroomServiceImpl implements ClassroomService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Classroom> classrooms = classroomRepository.findByTeacherUsername(username, pageable);
         return classrooms.map(classroomMapper::toClassroomResponse);
+    }
+
+    @Override
+    public List<SubjectWithClassroomResponse> getListSubjectsByClassrooms(List<Integer> listClassroomId){
+        List<SubjectWithClassroomResponse> subjectResponses = new ArrayList<>();
+        for(Integer classroomId:listClassroomId){
+            Optional<Classroom> classroom = (classroomRepository.findById(classroomId));
+            classroom.ifPresent(value -> subjectResponses.add(
+                    new SubjectWithClassroomResponse(classroomId, classroom.get().getSubject().getId(), classroom.get().getSubject().getName()))
+            );
+        }
+        return subjectResponses;
     }
 
 }

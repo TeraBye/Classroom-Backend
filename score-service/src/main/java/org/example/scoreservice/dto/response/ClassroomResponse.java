@@ -8,6 +8,8 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class ClassroomResponse {
-    String classroomId;
+    Integer classroomId;
     int total;
+    Integer subjectId;
+    String subjectName;
 }

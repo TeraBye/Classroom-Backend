@@ -24,7 +24,7 @@ public class ScoreController {
 
     @GetMapping("/get-classroom")
     public ApiResponse<List<ClassroomResponse>> getAllClassroom(
-            @RequestParam (defaultValue = "") String classroomId,
+            @RequestParam (defaultValue = "-999") Integer classroomId,
             @RequestParam int cursor,
             @RequestParam (defaultValue = "0") int page,
             @RequestParam (defaultValue = "15") int size
@@ -37,7 +37,7 @@ public class ScoreController {
 
     @GetMapping("/get-list-score")
     public ApiResponse<ScorePagingResponse<ScoreResponse>> getListUsers(
-            @RequestParam String classroomId,
+            @RequestParam Integer classroomId,
             @RequestParam (defaultValue = "-999") int studentId,
             @RequestParam int cursor,
             @RequestParam (defaultValue = "0") int page,

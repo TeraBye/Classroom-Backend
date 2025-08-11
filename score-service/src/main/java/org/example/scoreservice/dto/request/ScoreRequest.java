@@ -13,7 +13,7 @@ public class ScoreRequest {
 
     int studentId;
 
-    String classroomId;
+    Integer classroomId;
 
     TYPEOFSCORE typeofscore;
 

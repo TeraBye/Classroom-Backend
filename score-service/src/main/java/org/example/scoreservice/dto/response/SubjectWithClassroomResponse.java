@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class SubjectResponse {
+public class SubjectWithClassroomResponse {
+    Integer classroomId;
+
     Integer id;
 
     String name;

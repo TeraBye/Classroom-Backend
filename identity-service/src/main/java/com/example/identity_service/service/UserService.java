@@ -24,7 +24,7 @@ public interface UserService {
 
     UserProfileResponse getInfoUserIndex();
 
-    UserPagingResponse<UserDetailsResponse> getPageUsersProfile(int cursor, Pageable pageable);
+    UserPagingResponse<UserDetailsResponse> getPageUsersProfile(String username, int cursor, Pageable pageable);
 
     AccountResponse createNewUser(AccountRequest accountRequest);
     boolean deleteUserAccountByUserId(int userId);
