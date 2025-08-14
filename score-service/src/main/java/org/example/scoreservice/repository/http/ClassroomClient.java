@@ -10,7 +10,7 @@ import java.util.List;
 
 @FeignClient(name = "classroom-service",url = "${app.services.classrooms}")
 public interface ClassroomClient {
-    @PostMapping("/subjects/get-list-subjects")
+    @PostMapping("/get-list-subjects-by-classrooms")
     ApiResponse<List<SubjectWithClassroomResponse>> getListSubjectByClassrooms(
             @RequestBody List<Integer> listClassroomId
     );
