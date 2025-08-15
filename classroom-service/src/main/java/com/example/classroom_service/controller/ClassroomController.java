@@ -131,4 +131,11 @@ public class ClassroomController {
                 .result(classroomService.getListSubjectsByClassrooms(listClassroomId))
                 .build();
     }
+
+    @PostMapping("/get-list-class")
+    ApiResponse<List<Integer>> getListClass(){
+        return ApiResponse.<List<Integer>>builder()
+                .result(classroomService.getListClass())
+                .build();
+    }
 }

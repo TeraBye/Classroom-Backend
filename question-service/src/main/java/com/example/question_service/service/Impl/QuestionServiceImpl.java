@@ -16,7 +16,6 @@ import com.example.question_service.mapper.QuestionMapper;
 import com.example.question_service.repository.QuestionRepository;
 import com.example.question_service.service.QuestionHistoryService;
 import com.example.question_service.repository.http.ClassroomClient;
-import com.example.question_service.service.QuestionHistoryService;
 import com.example.question_service.service.QuestionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +31,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -270,5 +268,13 @@ public class QuestionServiceImpl implements QuestionService {
         return questionMapper.toQuestionResponses(
                 questionRepository.findByIdIn(request.getQuestionIds())
         );
+    }
+
+    @Override
+    public void deleteQuestionById(int questionId){
+        Question before = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
+
+        questionRepository.deleteById(questionId);
     }
 }

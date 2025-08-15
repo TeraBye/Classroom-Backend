@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {
     Optional<Classroom> findByClassCode(String classCode);
@@ -19,5 +20,8 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {
 
     @Query("SELECT c FROM Classroom c WHERE c.teacherUsername = :username")
     Page<Classroom> findByTeacherUsername(@Param("username") String username, Pageable pageable);
+
+    @Query("SELECT c.id FROM Classroom c order by c.id")
+    List<Integer> getAllClassroomId();
 
 }
