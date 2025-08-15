@@ -14,5 +14,8 @@ public interface ClassroomClient {
     ApiResponse<List<SubjectWithClassroomResponse>> getListSubjectByClassrooms(
             @RequestBody List<Integer> listClassroomId
     );
+
+    @PostMapping("/get-list-class")
+    ApiResponse<List<Integer>> getListClass();
 }
 

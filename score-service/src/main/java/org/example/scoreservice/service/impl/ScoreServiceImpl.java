@@ -39,7 +39,7 @@ public class ScoreServiceImpl implements ScoreService {
         if ((classroomId != -999)){
             classList = scoreRepository.findDistinctClassroomIdsByKeyword(classroomId, pageable);
         } else {
-            classList = scoreRepository.findNextPageClassScore(cursor, pageable);
+            classList = classroomClient.getListClass().getResult();
         }
 
         List<SubjectWithClassroomResponse> subjectResponses;
@@ -124,6 +124,13 @@ public class ScoreServiceImpl implements ScoreService {
     @Override
     public ScoreResponse updateScore(ScoreRequest scoreRequest) {
         TYPEOFSCORE type = TYPEOFSCORE.valueOf(String.valueOf(scoreRequest.getTypeofscore()).toUpperCase());
+
+        Optional<ScoreDetail> scoreByInformation = scoreRepository
+                .findByClassroomIdAndStudentIdAndTypeofscore(
+                        scoreRequest.getClassroomId(),
+                        scoreRequest.getStudentId(),
+                        type);
+        if (scoreByInformation.isPresent()) throw new BusinessException("This record already exist!");
 
         Optional<ScoreDetail> scoreDetailOptional = scoreRepository
                 .findById(scoreRequest.getScoreDetailId());

@@ -5,7 +5,6 @@ import com.example.classroom_service.dto.request.ClassroomUpdateRequest;
 import com.example.classroom_service.dto.response.ClassroomResponse;
 import com.example.classroom_service.dto.response.SubjectWithClassroomResponse;
 import com.example.classroom_service.entity.Classroom;
-import com.example.classroom_service.entity.Subject;
 import com.example.classroom_service.mapper.ClassroomMapper;
 import com.example.classroom_service.repository.ClassroomDetailRepository;
 import com.example.classroom_service.repository.ClassroomRepository;
@@ -95,6 +94,11 @@ public class ClassroomServiceImpl implements ClassroomService {
             );
         }
         return subjectResponses;
+    }
+
+    @Override
+    public List<Integer> getListClass(){
+        return classroomRepository.getAllClassroomId();
     }
 
 }

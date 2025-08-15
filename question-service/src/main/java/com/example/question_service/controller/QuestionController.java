@@ -141,4 +141,12 @@ public class QuestionController {
         return ApiResponse.<List<ClassListResponse>>builder()
                 .result(questionService.getSubjectList(subjectId,cursor,pageable)).build();
     }
+
+    @DeleteMapping("/{questionId}")
+    public ApiResponse<Void> deleteQuestion( @PathVariable("questionId") int questionId) {
+        questionService.deleteQuestionById(questionId);
+        return ApiResponse.<Void>builder()
+                .message("Delete question successfully")
+                .build();
+    }
 }
