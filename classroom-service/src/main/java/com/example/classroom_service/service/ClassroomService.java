@@ -19,4 +19,6 @@ public interface ClassroomService {
     Page<ClassroomResponse> findClassroomsByTeacherUsername(String username, int page, int size);
 
     List<SubjectWithClassroomResponse> getListSubjectsByClassrooms(List<Integer> listClassroomId);
+
+    List<Integer> getListClass();
 }

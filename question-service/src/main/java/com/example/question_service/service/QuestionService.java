@@ -28,4 +28,6 @@ public interface QuestionService {
     QuestionPagingResponse<QuestionResponse> getPageQuestion(Integer subjectId, int cursor, Pageable pageable);
 
     List<ClassListResponse> getSubjectList(Integer subjectId, int cursor, Pageable pageable);
+
+    void deleteQuestionById(int questionId);
 }
