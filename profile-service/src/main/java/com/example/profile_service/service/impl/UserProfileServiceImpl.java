@@ -138,4 +138,17 @@ public class UserProfileServiceImpl implements UserProfileService {
         }
         return "update account failed!";
     }
+
+    @Override
+    public UserProfileResponse updateProfile(UpdateProfileRequest request) {
+        UserProfile userProfile = userProfileRepository.findByUserId(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        userProfile.setUsername(request.getUsername());
+        userProfile.setFullName(request.getFullName());
+        userProfile.setEmail(request.getEmail());
+        userProfile.setDob(request.getDob());
+
+        UserProfile saved = userProfileRepository.save(userProfile);
+        return userProfileMapper.toUserProfileResponse(saved);
+    }
 }

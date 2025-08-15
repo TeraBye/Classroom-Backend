@@ -1,5 +1,5 @@
 server:
-  port: 8088
+  port: 8089
   servlet:
     context-path: /api/score
 
@@ -17,4 +17,4 @@ app:
   services:
     profile: http://localhost:8081/api/profile
     identity: http://localhost:8080/api/identity
-
+    classrooms: http://localhost:8888/api/classrooms
