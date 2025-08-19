@@ -97,12 +97,12 @@ public class ScoreServiceImpl implements ScoreService {
     public ScoreResponse createScore(ScoreRequest scoreRequest) {
         TYPEOFSCORE type = TYPEOFSCORE.valueOf(String.valueOf(scoreRequest.getTypeofscore()).toUpperCase());
 
-        Optional<ScoreDetail> scoreDetailOptional = scoreRepository
-                .findByClassroomIdAndStudentIdAndTypeofscore(
-                        scoreRequest.getClassroomId(),
-                        scoreRequest.getStudentId(),
-                        type);
-        if (scoreDetailOptional.isEmpty()) {
+//        Optional<ScoreDetail> scoreDetailOptional = scoreRepository
+//                .findByClassroomIdAndStudentIdAndTypeofscore(
+//                        scoreRequest.getClassroomId(),
+//                        scoreRequest.getStudentId(),
+//                        type);
+//        if (scoreDetailOptional.isEmpty()) {
 
             try {
                 UserResponse userResponse = identityClient.getUserById(scoreRequest.getStudentId()).getResult();
@@ -117,20 +117,20 @@ public class ScoreServiceImpl implements ScoreService {
                     .typeofscore(type).build();
 
             return scoreMapper.toScoreResponse(scoreRepository.save(scoreDetail1));
-        }
-        throw new BusinessException("This record already exist!");
+//        }
+//        throw new BusinessException("This record already exist!");
     }
 
     @Override
     public ScoreResponse updateScore(ScoreRequest scoreRequest) {
         TYPEOFSCORE type = TYPEOFSCORE.valueOf(String.valueOf(scoreRequest.getTypeofscore()).toUpperCase());
 
-        Optional<ScoreDetail> scoreByInformation = scoreRepository
-                .findByClassroomIdAndStudentIdAndTypeofscore(
-                        scoreRequest.getClassroomId(),
-                        scoreRequest.getStudentId(),
-                        type);
-        if (scoreByInformation.isPresent()) throw new BusinessException("This record already exist!");
+//        Optional<ScoreDetail> scoreByInformation = scoreRepository
+//                .findByClassroomIdAndStudentIdAndTypeofscore(
+//                        scoreRequest.getClassroomId(),
+//                        scoreRequest.getStudentId(),
+//                        type);
+//        if (scoreByInformation.isPresent()) throw new BusinessException("This record already exist!");
 
         Optional<ScoreDetail> scoreDetailOptional = scoreRepository
                 .findById(scoreRequest.getScoreDetailId());

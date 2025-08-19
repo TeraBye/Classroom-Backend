@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface AssignmentDetailRepository extends JpaRepository<AssignmentDetail, Integer> {
     Page<AssignmentDetail> findByAssignment_Id(Integer assignmentId, Pageable pageable);
     boolean existsByAssignment_IdAndStudentUsername(Integer assignmentId, String studentUsername);
+    AssignmentDetail findByAssignment_IdAndStudentUsername(Integer assignmentId, String studentUsername);
 }

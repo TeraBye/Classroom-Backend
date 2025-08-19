@@ -1,11 +1,8 @@
 package com.example.profile_service.controller;
 
-import com.example.profile_service.dto.request.ListUsernameRequest;
-import com.example.profile_service.dto.request.UpdateUserRequest;
-import com.example.profile_service.dto.request.UserProfileCreationRequest;
+import com.example.profile_service.dto.request.*;
 import com.example.profile_service.dto.response.ApiResponse;
 import com.example.profile_service.dto.response.UserProfileResponse;
-import com.example.profile_service.dto.request.CreateUserRequest;
 import com.example.profile_service.service.UserProfileService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -109,5 +106,12 @@ public class UserProfileController {
                     .result(userProfileService.updateUser(updateUserRequest))
                     .build();
         }
+    }
+
+    @PutMapping("/update-profile")
+    public ApiResponse<UserProfileResponse> updateProfile(@RequestBody UpdateProfileRequest request) {
+        return ApiResponse.<UserProfileResponse>builder()
+                .result(userProfileService.updateProfile(request))
+                .build();
     }
 }

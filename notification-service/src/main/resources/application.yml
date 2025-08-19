@@ -11,7 +11,7 @@ spring:
       auto-offset-reset: earliest
 
 server:
-  port: 9001
+  port: 8090
   address: 0.0.0.0
   servlet:
     context-path: /api/notifications

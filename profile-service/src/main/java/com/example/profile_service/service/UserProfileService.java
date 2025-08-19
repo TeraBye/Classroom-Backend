@@ -1,5 +1,6 @@
 package com.example.profile_service.service;
 
+import com.example.profile_service.dto.request.UpdateProfileRequest;
 import com.example.profile_service.dto.request.UpdateUserRequest;
 import com.example.profile_service.dto.request.UserProfileCreationRequest;
 import com.example.profile_service.dto.response.UserProfileResponse;
@@ -18,4 +19,6 @@ public interface UserProfileService {
 
     boolean createUser(CreateUserRequest createUserRequest);
     String updateUser(UpdateUserRequest updateUserRequest);
+
+    UserProfileResponse updateProfile(UpdateProfileRequest request);
 }

@@ -24,4 +24,5 @@ public interface AssignmentService {
     AssignmentDetailResponse submitAssignment(AssignmentSubmitRequest request) throws IOException, GeneralSecurityException;
     Page<AssignmentDetailResponse> getSubmissionsByAssignment(Integer assignmentId, int page, int size);
     boolean checkSubmission(Integer assignmentId, String studentUsername);
+    AssignmentDetailResponse getSubmissionOfStudent(Integer assignmentId, String studentUsername);
 }

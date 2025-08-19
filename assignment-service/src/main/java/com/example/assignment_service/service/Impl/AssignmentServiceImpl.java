@@ -164,6 +164,12 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
+    public AssignmentDetailResponse getSubmissionOfStudent(Integer assignmentId, String studentUsername) {
+        AssignmentDetail assignmentDetail = assignmentDetailRepository.findByAssignment_IdAndStudentUsername(assignmentId, studentUsername);
+        return assignmentDetailMapper.toAssignmentResponse(assignmentDetail);
+    }
+
+    @Override
     public List<AssignmentResponse> getAssignmentsByIds(ListIdRequest request){
         return getAssignmentResponsesFromIds(request.getIdsList());
     }

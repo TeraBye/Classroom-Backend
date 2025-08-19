@@ -102,4 +102,14 @@ public class AssignmentController {
                 .build();
     }
 
+    @GetMapping("/{assignmentId}/get-submission")
+    public ApiResponse<AssignmentDetailResponse> getSubmission(
+            @PathVariable Integer assignmentId,
+            @RequestParam String studentUsername
+    ) {
+        return ApiResponse.<AssignmentDetailResponse>builder()
+                .result(assignmentService.getSubmissionOfStudent(assignmentId, studentUsername))
+                .build();
+    }
+
 }
