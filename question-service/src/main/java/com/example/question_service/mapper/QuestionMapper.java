@@ -4,6 +4,7 @@ import com.example.question_service.dto.request.QuestionCreateRequest;
 import com.example.question_service.dto.request.QuestionUpdateRequest;
 import com.example.question_service.dto.response.QuestionResponse;
 import com.example.question_service.entity.Question;
+import com.example.question_service.entity.QuestionVersion;
 import org.mapstruct.*;
 
 import java.util.List;
@@ -14,6 +15,8 @@ public interface QuestionMapper {
 
     QuestionResponse toQuestionResponse(Question question);
     List<QuestionResponse> toQuestionResponses(List<Question> questions);
+    QuestionVersion toQuestionVersionFromCreateRequest(QuestionCreateRequest questionCreateRequest);
+    QuestionResponse toQuestionResponseFromVersion(QuestionVersion version);
     @Mapping(target = "id", ignore = true)
     void updateQuestion(QuestionUpdateRequest request, @MappingTarget Question question);
 }

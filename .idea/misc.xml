@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="EntryPointsManager">
     <writeAnnotations>
@@ -20,6 +21,7 @@
         <option value="$PROJECT_DIR$/notification-service/pom.xml" />
         <option value="$PROJECT_DIR$/exam-service/pom.xml" />
         <option value="$PROJECT_DIR$/score-service/pom.xml" />
+        <option value="$PROJECT_DIR$/logging-service/pom.xml" />
       </list>
     </option>
   </component>

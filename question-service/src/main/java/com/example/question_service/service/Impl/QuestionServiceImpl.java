@@ -9,6 +9,7 @@ import com.example.question_service.dto.response.QuestionResponse;
 import com.example.question_service.dto.response.SubjectResponse;
 import com.example.question_service.entity.Question;
 import com.example.question_service.entity.QuestionAction;
+import com.example.question_service.entity.QuestionVersion;
 import com.example.question_service.enums.ActionType;
 import com.example.question_service.enums.Level;
 import com.example.question_service.exception.BusinessException;
@@ -48,8 +49,18 @@ public class QuestionServiceImpl implements QuestionService {
         Question question = questionMapper.toQuestion(request);
         question.setCreatedAt(LocalDateTime.now());
 
+        QuestionVersion version = questionMapper.toQuestionVersionFromCreateRequest(request);
+        version.setQuestion(question);
+        version.setUpdatedBy(request.getUsername());
+        version.setVersion(1);
+
+        question.getVersions().add(version);
+        question.setCurrentVersion(version);
+
+        questionRepository.save(question);
+
         questionHistoryService.pushAction(request.getUsername(), new QuestionAction(ActionType.CREATE, null, question));
-        return questionMapper.toQuestionResponse(questionRepository.save(question));
+        return questionMapper.toQuestionResponseFromVersion(question.getCurrentVersion());
 
     }
 
@@ -71,6 +82,10 @@ public class QuestionServiceImpl implements QuestionService {
     public QuestionResponse updateQuestion(int questionId, QuestionUpdateRequest request) throws JsonProcessingException {
         Question existing = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
+
+        if (!request.getUsername().equals(existing.getUsername())) {
+            throw new BusinessException("Do not have permission");
+        }
 
         Question before = objectMapper.readValue(objectMapper.writeValueAsString(existing), Question.class);
         questionMapper.updateQuestion(request, existing);
@@ -97,6 +112,9 @@ public class QuestionServiceImpl implements QuestionService {
         Question before = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
 
+        if (!username.equals(before.getUsername())) {
+            throw new BusinessException("Do not have permission");
+        }
         questionRepository.deleteById(questionId);
         questionHistoryService.pushAction(username, new QuestionAction(ActionType.DELETE, before, null));
     }
