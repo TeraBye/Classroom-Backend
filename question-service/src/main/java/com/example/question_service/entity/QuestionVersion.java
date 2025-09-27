@@ -1,34 +1,37 @@
 package com.example.question_service.entity;
 
 import com.example.question_service.enums.Level;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "question")
+@Table(name = "question_version")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Question {
+public class QuestionVersion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "question_id", nullable = false)
+    @JsonBackReference
+    private Question question;
+
+    private Integer version;  // Bắt đầu từ 1, tăng dần
+
     private String content;
 
     private String optionA;
-
     private String optionB;
-
     private String optionC;
-
     private String optionD;
 
     private String correctAnswer;
@@ -41,18 +44,5 @@ public class Question {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    private String username;
-
-    private Integer subjectId;
-
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    @Builder.Default
-    private List<QuestionVersion> versions = new ArrayList<>();
-
-    private boolean locked = false;
-
+    private String updatedBy;  // Người sửa (từ JWT hoặc auth context)
 }

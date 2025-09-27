@@ -101,4 +101,11 @@ public class ExamController {
                 .build();
     }
 
+    @GetMapping("/{questionId}/isQuestionInUnstartedExam")
+    public ApiResponse<QuestionInUnstartedExamCheck> isQuestionInUnstartedExam(@PathVariable int questionId) {
+        return ApiResponse.<QuestionInUnstartedExamCheck>builder()
+                .result(examService.isQuestionInUnstartedExam(questionId))
+                .build();
+    }
+
 }

@@ -29,8 +29,6 @@ public class Classroom {
     @Column(name = "is_public")
     private Boolean isPublic = true;
 
-    private String teacherUsername;
-
     private String classCode;
 
     @Column(name = "created_at")

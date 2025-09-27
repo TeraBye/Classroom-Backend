@@ -9,11 +9,14 @@ import com.example.question_service.dto.response.QuestionResponse;
 import com.example.question_service.dto.response.SubjectResponse;
 import com.example.question_service.entity.Question;
 import com.example.question_service.entity.QuestionAction;
+import com.example.question_service.entity.QuestionVersion;
 import com.example.question_service.enums.ActionType;
 import com.example.question_service.enums.Level;
 import com.example.question_service.exception.BusinessException;
 import com.example.question_service.mapper.QuestionMapper;
 import com.example.question_service.repository.QuestionRepository;
+import com.example.question_service.repository.QuestionVersionRepository;
+import com.example.question_service.repository.http.ExamClient;
 import com.example.question_service.service.QuestionHistoryService;
 import com.example.question_service.repository.http.ClassroomClient;
 import com.example.question_service.service.QuestionService;
@@ -37,19 +40,29 @@ import java.util.Optional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuestionServiceImpl implements QuestionService {
     QuestionRepository questionRepository;
+    QuestionVersionRepository versionRepository;
     QuestionMapper questionMapper;
     QuestionHistoryService questionHistoryService;
     ObjectMapper objectMapper;
     ClassroomClient classroomClient;
+    ExamClient examClient;
 
     @Override
     @Transactional
     public QuestionResponse createQuestion(QuestionCreateRequest request) {
         Question question = questionMapper.toQuestion(request);
         question.setCreatedAt(LocalDateTime.now());
+        questionRepository.save(question);
+
+        QuestionVersion version = questionMapper.toQuestionVersionFromCreateRequest(request);
+        version.setQuestion(question);
+        version.setUpdatedBy(request.getUsername());
+        version.setVersion(1);
+        version.setCreatedAt(LocalDateTime.now());
+        versionRepository.save(version);
 
         questionHistoryService.pushAction(request.getUsername(), new QuestionAction(ActionType.CREATE, null, question));
-        return questionMapper.toQuestionResponse(questionRepository.save(question));
+        return questionMapper.toQuestionResponse(question);
 
     }
 
@@ -72,6 +85,19 @@ public class QuestionServiceImpl implements QuestionService {
         Question existing = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
 
+        if (examClient.isQuestionInUnstartedExam(questionId).getResult().getIsInUnstartedExam()) {
+            throw new BusinessException("Cannot update question as it is part of an unstarted exam");
+        }
+
+        if (!request.getUsername().equals(existing.getUsername())) {
+            throw new BusinessException("Do not have permission");
+        }
+
+        int latestVersion = existing.getVersions().stream()
+                .mapToInt(QuestionVersion::getVersion)
+                .max()
+                .orElse(0);
+
         Question before = objectMapper.readValue(objectMapper.writeValueAsString(existing), Question.class);
         questionMapper.updateQuestion(request, existing);
 //        existing.setContent(request.getContent());
@@ -87,6 +113,13 @@ public class QuestionServiceImpl implements QuestionService {
 
         existing.setUpdatedAt(LocalDateTime.now());
 
+        QuestionVersion version = questionMapper.toQuestionVersion(existing);
+        version.setQuestion(existing);
+        version.setVersion(latestVersion + 1);
+        version.setUpdatedBy(request.getUsername());
+        version.setCreatedAt(LocalDateTime.now());
+        versionRepository.save(version);
+
         questionHistoryService.pushAction(request.getUsername(), new QuestionAction(ActionType.UPDATE, before, existing));
         return questionMapper.toQuestionResponse(questionRepository.save(existing));
     }
@@ -97,6 +130,13 @@ public class QuestionServiceImpl implements QuestionService {
         Question before = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
 
+        if (examClient.isQuestionInUnstartedExam(questionId).getResult().getIsInUnstartedExam()) {
+            throw new BusinessException("Cannot delete question as it is part of an unstarted exam");
+        }
+
+        if (!username.equals(before.getUsername())) {
+            throw new BusinessException("Do not have permission");
+        }
         questionRepository.deleteById(questionId);
         questionHistoryService.pushAction(username, new QuestionAction(ActionType.DELETE, before, null));
     }
