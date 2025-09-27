@@ -1,6 +1,7 @@
 package com.example.question_service.entity;
 
 import com.example.question_service.enums.Level;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +22,7 @@ public class QuestionVersion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
+    @JsonBackReference
     private Question question;
 
     private Integer version;  // Bắt đầu từ 1, tăng dần
@@ -40,7 +42,7 @@ public class QuestionVersion {
     private Level level;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     private String updatedBy;  // Người sửa (từ JWT hoặc auth context)
 }

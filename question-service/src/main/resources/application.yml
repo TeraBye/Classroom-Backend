@@ -16,3 +16,4 @@ spring:
 app:
   services:
     classrooms: http://localhost:8084/api/classrooms
+    exam: http://localhost:8088/api/exam

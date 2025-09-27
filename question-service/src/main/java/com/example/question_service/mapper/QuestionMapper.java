@@ -18,5 +18,7 @@ public interface QuestionMapper {
     QuestionVersion toQuestionVersionFromCreateRequest(QuestionCreateRequest questionCreateRequest);
     QuestionResponse toQuestionResponseFromVersion(QuestionVersion version);
     @Mapping(target = "id", ignore = true)
+    QuestionVersion toQuestionVersion(Question question);
+    @Mapping(target = "id", ignore = true)
     void updateQuestion(QuestionUpdateRequest request, @MappingTarget Question question);
 }

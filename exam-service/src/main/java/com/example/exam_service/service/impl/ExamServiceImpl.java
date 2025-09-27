@@ -3,6 +3,7 @@ package com.example.exam_service.service.impl;
 import com.example.exam_service.dto.request.ExamCreationRequest;
 import com.example.exam_service.dto.response.ExamResponse;
 import com.example.exam_service.dto.response.ExamViewResponse;
+import com.example.exam_service.dto.response.QuestionInUnstartedExamCheck;
 import com.example.exam_service.dto.response.QuestionResponse;
 import com.example.exam_service.entity.Exam;
 import com.example.exam_service.entity.ExamQuestion;
@@ -17,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,6 +81,13 @@ public class ExamServiceImpl implements ExamService {
         return examMapper.toExamResponseList(exams);
     }
 
+    @Override
+    public QuestionInUnstartedExamCheck isQuestionInUnstartedExam(int questionId) {
+        List<ExamQuestion> unstartedExams = examQuestionRepository.findUnstartedExamsByQuestionId(questionId, LocalDateTime.now());
+        return QuestionInUnstartedExamCheck.builder()
+                .isInUnstartedExam(!unstartedExams.isEmpty())
+                .build();
+    }
 
 
 }
