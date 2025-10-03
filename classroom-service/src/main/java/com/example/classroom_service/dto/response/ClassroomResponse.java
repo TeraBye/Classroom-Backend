@@ -24,8 +24,6 @@ public class ClassroomResponse {
 
     Boolean isPublic;
 
-    String teacherUsername;
-
     String classCode;
 
     LocalDateTime createdAt;

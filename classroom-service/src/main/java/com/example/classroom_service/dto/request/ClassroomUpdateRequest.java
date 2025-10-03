@@ -13,12 +13,8 @@ import lombok.experimental.FieldDefaults;
 public class ClassroomUpdateRequest {
     String name;
 
-    Subject subject;
-
     String meetLink;
 
     Boolean isPublic;
-
-    String teacherUsername;
 
 }

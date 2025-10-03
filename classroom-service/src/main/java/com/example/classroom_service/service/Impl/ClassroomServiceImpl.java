@@ -5,9 +5,13 @@ import com.example.classroom_service.dto.request.ClassroomUpdateRequest;
 import com.example.classroom_service.dto.response.ClassroomResponse;
 import com.example.classroom_service.dto.response.SubjectWithClassroomResponse;
 import com.example.classroom_service.entity.Classroom;
+import com.example.classroom_service.entity.Subject;
+import com.example.classroom_service.entity.TeacherSubject;
 import com.example.classroom_service.mapper.ClassroomMapper;
 import com.example.classroom_service.repository.ClassroomDetailRepository;
 import com.example.classroom_service.repository.ClassroomRepository;
+import com.example.classroom_service.repository.SubjectRepository;
+import com.example.classroom_service.repository.TeacherSubjectRepository;
 import com.example.classroom_service.service.ClassroomService;
 import com.example.classroom_service.util.ClassroomUtil;
 import lombok.AccessLevel;
@@ -17,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,7 +34,9 @@ import java.util.Optional;
 public class ClassroomServiceImpl implements ClassroomService {
     ClassroomRepository classroomRepository;
     ClassroomMapper classroomMapper;
+    SubjectRepository subjectRepository;
     ClassroomDetailRepository classroomDetailRepository;
+    private final TeacherSubjectRepository teacherSubjectRepository;
 
     @Override
     public ClassroomResponse createClassroom(ClassroomCreateRequest request) {
@@ -45,11 +52,13 @@ public class ClassroomServiceImpl implements ClassroomService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ClassroomResponse> getAllClassrooms() {
         return classroomMapper.toClassroomResponses(classroomRepository.findAll());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClassroomResponse getClassroomById(int classroomId) {
         Classroom classroom = classroomRepository.findById(classroomId)
                 .orElseThrow(() -> new RuntimeException("Classroom not found with ID: " + classroomId));
@@ -61,13 +70,17 @@ public class ClassroomServiceImpl implements ClassroomService {
         Classroom classroom = classroomRepository.findById(classroomId)
                 .orElseThrow(() -> new RuntimeException("Classroom not found with ID: " + classroomId));
         classroomMapper.updateClassroom(classroom, request);
+
         classroomRepository.save(classroom);
         return classroomMapper.toClassroomResponse(classroom);
     }
 
     @Override
     public void deleteClassroom(int classroomId) {
-        classroomRepository.deleteById(classroomId);
+        Classroom classroom = classroomRepository.findById(classroomId)
+                .orElseThrow(() -> new RuntimeException("Classroom not found with ID: " + classroomId));
+        classroom.setDeleted(true);
+        classroomRepository.save(classroom);
     }
 
     @Override
@@ -80,7 +93,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     @Override
     public Page<ClassroomResponse> findClassroomsByTeacherUsername(String username, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Classroom> classrooms = classroomRepository.findByTeacherUsername(username, pageable);
+        Page<Classroom> classrooms = classroomRepository.findByTeacherSubject_TeacherUsername(username, pageable);
         return classrooms.map(classroomMapper::toClassroomResponse);
     }
 
@@ -89,9 +102,9 @@ public class ClassroomServiceImpl implements ClassroomService {
         List<SubjectWithClassroomResponse> subjectResponses = new ArrayList<>();
         for(Integer classroomId:listClassroomId){
             Optional<Classroom> classroom = (classroomRepository.findById(classroomId));
-            classroom.ifPresent(value -> subjectResponses.add(
-                    new SubjectWithClassroomResponse(classroomId, classroom.get().getSubject().getId(), classroom.get().getSubject().getName()))
-            );
+//            classroom.ifPresent(value -> subjectResponses.add(
+//                    new SubjectWithClassroomResponse(classroomId, classroom.get().getSubject().getId(), classroom.get().getSubject().getName()))
+//            );
         }
         return subjectResponses;
     }

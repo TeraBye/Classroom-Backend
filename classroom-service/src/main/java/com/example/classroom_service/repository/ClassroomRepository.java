@@ -18,8 +18,7 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {
             "OR LOWER(c.subject.name) LIKE LOWER(CONCAT('%', :q, '%'))")
     Page<Classroom> searchClassrooms(@Param("q") String q, Pageable pageable);
 
-    @Query("SELECT c FROM Classroom c WHERE c.teacherUsername = :username")
-    Page<Classroom> findByTeacherUsername(@Param("username") String username, Pageable pageable);
+    Page<Classroom> findByTeacherSubject_TeacherUsername(String teacherUsername, Pageable pageable);
 
     @Query("SELECT c.id FROM Classroom c order by c.id")
     List<Integer> getAllClassroomId();

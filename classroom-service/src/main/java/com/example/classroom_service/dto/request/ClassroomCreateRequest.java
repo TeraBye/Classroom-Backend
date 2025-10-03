@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class ClassroomCreateRequest {
     String name;
 
-    Subject subject;
+    Integer subjectId;
 
     String meetLink;
 

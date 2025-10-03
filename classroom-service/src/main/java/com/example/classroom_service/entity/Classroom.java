@@ -20,18 +20,21 @@ public class Classroom {
     @Column(name = "name")
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "subject_id")
-    private Subject subject;
-
     private String meetLink;
 
     @Column(name = "is_public")
-    private Boolean isPublic = true;
+    private boolean isPublic = true;
 
     private String classCode;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "is_deleted")
+    private boolean isDeleted = false;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "teacher_subject_id")
+    private TeacherSubject teacherSubject;
 
 }
