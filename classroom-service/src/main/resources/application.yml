@@ -16,3 +16,4 @@ spring:
 app:
   services:
     profile: http://localhost:8081/api/profile
+    post: http://localhost:8087/api/post

@@ -102,7 +102,7 @@ public class ClassroomController {
             @RequestParam(value = "size", defaultValue = "10") int size) {
 
         return ApiResponse.<Page<StudentResponse>>builder()
-                .result(classroomDetailService.findStudentClasses(username,page,size))
+                .result(classroomService.findStudentClasses(username,page,size))
                 .build();
     }
 
@@ -120,6 +120,14 @@ public class ClassroomController {
     public ApiResponse<List<String>> findStudentUsernamesByClassroomId(@PathVariable int classroomId) {
         return ApiResponse.<List<String>>builder()
                 .result(classroomDetailService.findStudentUsernamesByClassroomId(classroomId))
+                .build();
+    }
+
+    @PatchMapping("/{classroomId}/restore")
+    public ApiResponse<Void> restore(@PathVariable int classroomId) {
+        classroomService.restore(classroomId);
+        return ApiResponse.<Void>builder()
+                .message("Restore classroom successfully")
                 .build();
     }
 

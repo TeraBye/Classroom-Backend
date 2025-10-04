@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class StudentResponse {
      Integer id;
 
-     Classroom classroom;
+     ClassroomResponse classroom;
 
      String studentUsername;
 

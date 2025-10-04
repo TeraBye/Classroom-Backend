@@ -26,6 +26,7 @@ public class TeacherSubject {
     private Subject subject;
 
     @OneToMany(mappedBy = "teacherSubject", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<Classroom> classrooms = new LinkedHashSet<>();
 
 }
