@@ -21,4 +21,6 @@ public interface ClassroomDetailRepository extends JpaRepository<ClassroomDetail
 
     @Query("SELECT cd.studentUsername FROM ClassroomDetail cd WHERE cd.classroom.id = :classroomId")
     List<String> findStudentUsernamesByClassroomId(@Param("classroomId") int classroomId);
+
+    long countByClassroom_Id(Integer id);
 }

@@ -2,6 +2,7 @@ package com.example.post_service.controller;
 
 import com.example.post_service.dto.request.PostCreationRequest;
 import com.example.post_service.dto.response.ApiResponse;
+import com.example.post_service.dto.response.ClassPostResponse;
 import com.example.post_service.dto.response.PostResponse;
 import com.example.post_service.dto.response.UserPostResponse;
 import com.example.post_service.entity.Post;
@@ -34,6 +35,13 @@ public class PostController {
     ) {
         return ApiResponse.<List<UserPostResponse>>builder()
                 .result(postService.getPostsbyClass(classId, page, size))
+                .build();
+    }
+
+    @GetMapping("/count-by-classrooms")
+    public ApiResponse<List<ClassPostResponse>> getPostNumByClassIds(@RequestParam List<Integer> classIds) {
+        return ApiResponse.<List<ClassPostResponse>>builder()
+                .result(postService.getPostNumsByClassIds(classIds))
                 .build();
     }
 

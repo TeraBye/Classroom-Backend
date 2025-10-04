@@ -15,6 +15,7 @@ public interface ExamQuestionRepository extends JpaRepository<ExamQuestion,Long>
             "JOIN eq.exam e " +
             "LEFT JOIN ExamSubmission es ON e.id = es.exam.id " +
             "WHERE eq.questionId = :questionId " +
-            "AND (es.id IS NULL AND (e.beginTime OR e.beginTime > :now))")
+            "AND es.id IS NULL " +
+            "AND e.beginTime > :now")
     List<ExamQuestion> findUnstartedExamsByQuestionId(@Param("questionId") int questionId, @Param("now") LocalDateTime now);
 }

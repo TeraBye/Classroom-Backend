@@ -15,7 +15,15 @@ import java.util.List;
 public interface ClassroomMapper {
     Classroom toClassroom(ClassroomCreateRequest request);
 
+    @Mapping(target = "studentNum", expression = "java(classroom.getStudentCount())")
+    @Mapping(target = "postNum", ignore = true)
+    @Mapping(target = "teacherUsername", source = "teacherSubject.teacherUsername")
+    @Mapping(target = "subjectId", source = "teacherSubject.subject.id")
+    @Mapping(target = "subjectName", source = "teacherSubject.subject.name")
+    @Mapping(target = "teacherName", ignore = true)
     ClassroomResponse toClassroomResponse(Classroom classroom);
+
     List<ClassroomResponse> toClassroomResponses(List<Classroom> classrooms);
+
     void updateClassroom(@MappingTarget Classroom classroom, ClassroomUpdateRequest request);
 }

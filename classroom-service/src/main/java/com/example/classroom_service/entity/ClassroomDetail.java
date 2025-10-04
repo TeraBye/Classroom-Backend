@@ -1,5 +1,6 @@
 package com.example.classroom_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class ClassroomDetail {
 
     @ManyToOne
     @JoinColumn(name = "classroom_id")
+    @JsonBackReference
     private Classroom classroom;
 
     @Column(name = "student_username")

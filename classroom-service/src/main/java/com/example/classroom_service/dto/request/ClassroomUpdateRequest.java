@@ -1,6 +1,5 @@
 package com.example.classroom_service.dto.request;
 
-import com.example.classroom_service.entity.Subject;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -13,12 +12,8 @@ import lombok.experimental.FieldDefaults;
 public class ClassroomUpdateRequest {
     String name;
 
-    Subject subject;
-
     String meetLink;
 
-    Boolean isPublic;
-
-    String teacherUsername;
+    boolean isPublic;
 
 }

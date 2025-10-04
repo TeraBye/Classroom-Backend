@@ -8,6 +8,7 @@ import com.example.classroom_service.dto.response.UserProfileResponse;
 import com.example.classroom_service.entity.Classroom;
 import com.example.classroom_service.entity.ClassroomDetail;
 import com.example.classroom_service.mapper.ClassroomDetailMapper;
+import com.example.classroom_service.mapper.ClassroomMapper;
 import com.example.classroom_service.repository.ClassroomDetailRepository;
 import com.example.classroom_service.repository.ClassroomRepository;
 import com.example.classroom_service.repository.httpclient.ProfileClient;
@@ -33,6 +34,7 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
     ClassroomDetailRepository classroomDetailRepository;
     ClassroomDetailMapper classroomDetailMapper;
     ProfileClient profileClient;
+    ClassroomMapper classroomMapper;
 
     @Override
     public StudentResponse addStudent(StudentAddRequest request) {
@@ -65,13 +67,6 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
                 .orElseThrow(() -> new RuntimeException("Student with username " + request.getStudentUsername() + " is not enrolled in the classroom."));
 
         classroomDetailRepository.delete(classroomDetail);
-    }
-
-    @Override
-    public Page<StudentResponse> findStudentClasses(String studentUsername, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<ClassroomDetail> classroomDetails = classroomDetailRepository.findByStudentUsername(studentUsername, pageable);
-        return classroomDetails.map(classroomDetailMapper::toStudentResponse);
     }
 
     @Override

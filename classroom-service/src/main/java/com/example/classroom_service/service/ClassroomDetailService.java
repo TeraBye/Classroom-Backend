@@ -11,7 +11,6 @@ import java.util.List;
 public interface ClassroomDetailService {
     StudentResponse addStudent(StudentAddRequest request);
     void deleteStudent(StudentRemoveRequest request);
-    Page<StudentResponse> findStudentClasses(String studentUsername, int page, int size);
     Page<UserProfileResponse> getStudentsOfClass(int classroomId, int page, int size);
     List<String> findStudentUsernamesByClassroomId(int classroomId);
 }

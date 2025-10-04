@@ -3,6 +3,10 @@ package com.example.classroom_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,5 +24,9 @@ public class TeacherSubject {
     @ManyToOne
     @JoinColumn(name = "subject_id")
     private Subject subject;
+
+    @OneToMany(mappedBy = "teacherSubject", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<Classroom> classrooms = new LinkedHashSet<>();
 
 }

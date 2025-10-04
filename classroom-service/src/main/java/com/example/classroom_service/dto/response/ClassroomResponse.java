@@ -1,7 +1,6 @@
 package com.example.classroom_service.dto.response;
 
-import com.example.classroom_service.entity.Subject;
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -18,15 +17,26 @@ public class ClassroomResponse {
 
     String name;
 
-    Subject subject;
-
     String meetLink;
 
-    Boolean isPublic;
+    boolean isPublic;
+
+    String classCode;
+
+    @Builder.Default
+    Long postNum = 0L;
+
+    int studentNum = 0;
+
+    boolean isDeleted;
 
     String teacherUsername;
 
-    String classCode;
+    String teacherName;
+
+    Integer subjectId;
+
+    String subjectName;
 
     LocalDateTime createdAt;
 }

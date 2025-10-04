@@ -15,13 +15,16 @@ public interface ClassroomRepository extends JpaRepository<Classroom, Integer> {
 
     @Query("SELECT c FROM Classroom c " +
             "WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%')) " +
-            "OR LOWER(c.subject.name) LIKE LOWER(CONCAT('%', :q, '%'))")
+            "OR LOWER(c.teacherSubject.subject.name) LIKE LOWER(CONCAT('%', :q, '%'))")
     Page<Classroom> searchClassrooms(@Param("q") String q, Pageable pageable);
-
-    @Query("SELECT c FROM Classroom c WHERE c.teacherUsername = :username")
-    Page<Classroom> findByTeacherUsername(@Param("username") String username, Pageable pageable);
 
     @Query("SELECT c.id FROM Classroom c order by c.id")
     List<Integer> getAllClassroomId();
+
+    Page<Classroom> findByTeacherSubject_TeacherUsernameAndIsDeleted(String teacherUsername, boolean isDeleted, Pageable pageable);
+
+    Page<Classroom> findByTeacherSubject_TeacherUsername(String teacherUsername, Pageable pageable);
+
+    boolean existsByName(String name);
 
 }

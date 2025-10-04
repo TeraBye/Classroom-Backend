@@ -3,10 +3,7 @@ package com.example.post_service.service.impl;
 import com.example.post_service.dto.request.AssignmentCreateRequest;
 import com.example.post_service.dto.request.ListIdRequest;
 import com.example.post_service.dto.request.PostCreationRequest;
-import com.example.post_service.dto.response.AssignmentResponse;
-import com.example.post_service.dto.response.PostResponse;
-import com.example.post_service.dto.response.UserPostResponse;
-import com.example.post_service.dto.response.UserProfileResponse;
+import com.example.post_service.dto.response.*;
 import com.example.post_service.entity.Post;
 import com.example.post_service.mapper.PostMapper;
 import com.example.post_service.repository.PostRepository;
@@ -22,6 +19,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,8 +37,8 @@ public class PostServiceImpl implements PostService {
     SimpMessagingTemplate messagingTemplate;
 
     @Override
-    public UserPostResponse createPost(PostCreationRequest request){
-        AssignmentResponse assignmentResponse =  assignmentClient.createAssignment(
+    public UserPostResponse createPost(PostCreationRequest request) {
+        AssignmentResponse assignmentResponse = assignmentClient.createAssignment(
                 postMapper.toAssignmentCreateRequest(request)
         ).getResult();
 
@@ -101,6 +99,11 @@ public class PostServiceImpl implements PostService {
                 })
                 .toList();
 
+    }
+
+    @Override
+    public List<ClassPostResponse> getPostNumsByClassIds(List<Integer> classIds) {
+        return postRepository.countPostsByClassIds(classIds);
     }
 
 }
