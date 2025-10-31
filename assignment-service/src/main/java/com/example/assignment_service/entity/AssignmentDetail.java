@@ -34,4 +34,11 @@ public class AssignmentDetail {
     @Column(name = "student_username")
     private String studentUsername;
 
+    @Column(name = "submission_count")
+    @Builder.Default
+    private Integer submissionCount = 0;
+
+    @Version
+    private Long version;
+
 }

@@ -1,9 +1,9 @@
 package com.example.assignment_service.dto.response;
 
-import com.example.assignment_service.entity.Assignment;
+import com.example.assignment_service.enums.AssignmentDetailStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
@@ -12,9 +12,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AssignmentDetailResponse {
     Integer id;
-    Assignment assignment;
+    Integer assignmentId;
     @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
     LocalDateTime submitTime;
 
@@ -22,6 +23,13 @@ public class AssignmentDetailResponse {
 
     String fileUrl;
 
-    String studentUsername;
+//    String studentUsername;
+//
+//    String studentName;
+//
+//    String avatar;
+
+    AssignmentDetailStatus status;
+    Integer submissionCount;
 
 }

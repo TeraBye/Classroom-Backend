@@ -1,25 +1,26 @@
 package com.example.assignment_service.service.Impl;
 
-import com.example.assignment_service.dto.request.AssignmentCreateRequest;
-import com.example.assignment_service.dto.request.AssignmentSubmitRequest;
-import com.example.assignment_service.dto.request.AssignmentUpdateRequest;
-import com.example.assignment_service.dto.response.AssignmentDetailResponse;
-import com.example.assignment_service.dto.request.ListIdRequest;
-import com.example.assignment_service.dto.response.AssignmentResponse;
+import com.example.assignment_service.dto.request.*;
+import com.example.assignment_service.dto.response.*;
 import com.example.assignment_service.entity.Assignment;
 import com.example.assignment_service.entity.AssignmentDetail;
+import com.example.assignment_service.enums.AssignmentDetailStatus;
+import com.example.assignment_service.enums.AssignmentSubmitStatus;
 import com.example.assignment_service.mapper.AssignmentDetailMapper;
 import com.example.assignment_service.mapper.AssignmentMapper;
 import com.example.assignment_service.repository.AssignmentDetailRepository;
 import com.example.assignment_service.repository.AssignmentRepository;
+import com.example.assignment_service.repository.httpclient.ClassroomClient;
+import com.example.assignment_service.repository.httpclient.ProfileClient;
 import com.example.assignment_service.service.AssignmentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.View;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -27,8 +28,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,9 +42,12 @@ public class AssignmentServiceImpl implements AssignmentService {
     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd:MM:yyyy");
     AssignmentDetailRepository assignmentDetailRepository;
     AssignmentDetailMapper assignmentDetailMapper;
+    ClassroomClient classroomClient;
+    ProfileClient profileClient;
+    private final View view;
 
     @Override
-    public AssignmentResponse createAssignment(AssignmentCreateRequest request) throws GeneralSecurityException, IOException {
+    public AssignmentResponse createAssignment(AssignmentCreateRequest request) {
 //        LocalDateTime deadline;
 
         String[] parts = request.getDeadline().split(" ");
@@ -81,33 +85,6 @@ public class AssignmentServiceImpl implements AssignmentService {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
 
-//        // Handle file upload if a new file is provided
-//        String newFileUrl = assignment.getFileUrl();
-//        if (request.getFile() != null && !request.getFile().isEmpty()) {
-//            // Delete the old file if it exists
-//            if (assignment.getFileUrl() != null) {
-//                fileStorageService.deleteFile(assignment.getFileUrl());
-//            }
-//            // Upload the new file
-//            newFileUrl = fileStorageService.uploadFile(request.getFile(), request.getUsername(), Optional.of(assignmentId), "TEACHER");
-//        }
-//
-//        // Parse the deadline if provided
-//        LocalDateTime deadline = assignment.getDeadline();
-//        if (request.getDeadline() != null && !request.getDeadline().isBlank()) {
-//            String[] parts = request.getDeadline().split(" ");
-//            LocalTime time = LocalTime.parse(parts[0], timeFormatter);
-//            LocalDate date = LocalDate.parse(parts[1], dateFormatter);
-//            deadline = LocalDateTime.of(date, time);
-//        }
-//
-//        // Update assignment code if username or deadline changed
-//        if (request.getUsername() != null && !request.getUsername().isBlank() &&
-//                request.getDeadline() != null && !request.getDeadline().isBlank() &&
-//                (!assignment.getUsername().equals(request.getUsername()) || !assignment.getDeadline().equals(deadline))) {
-//            assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline());
-//        }
-
         if (!assignment.getDeadline().equals(request.getDeadline()) ||
                 !assignment.getUsername().equals(request.getUsername())) {
             assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline());
@@ -123,55 +100,195 @@ public class AssignmentServiceImpl implements AssignmentService {
     public void deleteAssignment(int assignmentId) throws GeneralSecurityException, IOException {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
-//        if (assignment.getFileUrl() != null) {
-//            fileStorageService.deleteFile(assignment.getFileUrl());
-//        }
         assignmentRepository.deleteById(assignmentId);
     }
 
     @Override
-    public AssignmentDetailResponse submitAssignment(AssignmentSubmitRequest request) throws IOException, GeneralSecurityException {
+    public AssignmentDetailResponse submitAssignment(AssignmentSubmitRequest request) {
         Assignment assignment = assignmentRepository.findById(request.getAssignmentId())
                 .orElseThrow(() -> new IllegalArgumentException("Assignment not found with ID: " + request.getAssignmentId()));
 
-        if (assignment.getDeadline() != null && assignment.getDeadline().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Assignment submission deadline has passed");
+        AssignmentDetail detail = assignmentDetailRepository
+                .findByAssignment_IdAndStudentUsername(request.getAssignmentId(), request.getStudentUsername())
+                .orElse(null);
+
+        if (detail == null) {
+            detail = AssignmentDetail.builder()
+                    .assignment(assignment)
+                    .studentUsername(request.getStudentUsername())
+                    .note(request.getNote())
+                    .fileUrl(request.getFileUrl())
+                    .submitTime(LocalDateTime.now())
+                    .submissionCount(1)
+                    .build();
+        } else {
+            // update: tăng counter, cập nhật file/note/time
+            detail.setSubmitTime(LocalDateTime.now());
+            detail.setNote(request.getNote());
+            detail.setFileUrl(request.getFileUrl());
+            detail.setSubmissionCount((detail.getSubmissionCount() == null ? 0 : detail.getSubmissionCount()) + 1);
         }
 
-        AssignmentDetail assignmentDetail = AssignmentDetail.builder()
-                .assignment(assignment)
-                .submitTime(LocalDateTime.now())
-                .note(request.getNote())
-                .fileUrl(request.getFileUrl())
-                .studentUsername(request.getStudentUsername())
-                .build();
+        detail = assignmentDetailRepository.save(detail);
 
-        assignmentDetail = assignmentDetailRepository.save(assignmentDetail);
-
-        return assignmentDetailMapper.toAssignmentResponse(assignmentDetail);
+        return assignmentDetailMapper.toAssignmentDetailResponse(detail, assignment.getDeadline());
     }
 
     @Override
-    public Page<AssignmentDetailResponse> getSubmissionsByAssignment(Integer assignmentId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<AssignmentDetail> assignmentDetails = assignmentDetailRepository.findByAssignment_Id(assignmentId, pageable);
-        return assignmentDetails.map(assignmentDetailMapper::toAssignmentResponse);
+    public Page<StudentAssignmentViewResponse> getSubmissionsByAssignment(Integer assignmentId, String status, Pageable pageable) {
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+
+        List<String> allStudents = classroomClient
+                .findStudentUsernamesByClassroomId(assignment.getClassroomId()).getResult();
+
+        List<AssignmentDetail> details = assignmentDetailRepository.findByAssignment_Id(assignmentId);
+
+        Map<String, AssignmentDetail> detailMap = details.stream()
+                .collect(Collectors.toMap(AssignmentDetail::getStudentUsername, Function.identity()));
+
+        List<StudentAssignmentViewResponse> responses = new ArrayList<>();
+
+        for (String username : allStudents) {
+            AssignmentDetail det = detailMap.get(username);
+
+            AssignmentSubmitStatus overallStatus;
+            AssignmentDetailResponse latestSubmission = null;
+
+            if (det == null) {
+                responses.add(StudentAssignmentViewResponse.builder()
+                        .studentUsername(username)
+                        .status(AssignmentSubmitStatus.NOT_SUBMITTED)
+                        .submission(null)
+                        .build());
+            } else {
+                AssignmentDetailResponse subResp = assignmentDetailMapper.toAssignmentDetailResponse(det, assignment.getDeadline());
+
+                AssignmentSubmitStatus overall = (subResp.getStatus() == AssignmentDetailStatus.LATE)
+                        ? AssignmentSubmitStatus.LATE
+                        : AssignmentSubmitStatus.SUBMITTED;
+
+                responses.add(StudentAssignmentViewResponse.builder()
+                        .studentUsername(username)
+                        .status(overall)
+                        .submission(subResp)
+                        .build());
+            }
+        }
+
+        // Lọc theo trạng thái tổng thể nếu có
+        if (status != null && !status.isBlank()) {
+            AssignmentSubmitStatus desired = AssignmentSubmitStatus.valueOf(status.toUpperCase());
+            responses = responses.stream()
+                    .filter(r -> r.getStatus() == desired)
+                    .collect(Collectors.toList());
+        }
+
+        responses = enrichWithProfileInfo(responses);
+
+        // Phân trang
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), responses.size());
+        List<StudentAssignmentViewResponse> pageContent = responses.subList(start, end);
+
+        return new PageImpl<>(pageContent, pageable, responses.size());
     }
 
-    @Override
-    public boolean checkSubmission(Integer assignmentId, String studentUsername) {
-        return assignmentDetailRepository.existsByAssignment_IdAndStudentUsername(assignmentId, studentUsername);
+    private List<StudentAssignmentViewResponse> enrichWithProfileInfo(List<StudentAssignmentViewResponse> responses) {
+        if (responses == null || responses.isEmpty()) return responses;
+
+        List<String> usernames = responses.stream()
+                .map(StudentAssignmentViewResponse::getStudentUsername)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        List<UserProfileResponse> userProfiles = profileClient.getListUserByListUsername(new ListUsernameRequest(usernames)).getResult();
+
+        Map<String, UserProfileResponse> profileMap = userProfiles.stream()
+                .collect(Collectors.toMap(UserProfileResponse::getUsername, p -> p));
+
+        responses.forEach(r -> {
+            UserProfileResponse profile = profileMap.get(r.getStudentUsername());
+            if (profile != null) {
+                r.setStudentName(profile.getFullName());
+                r.setAvatar(profile.getAvatar());
+            } else {
+                r.setStudentName("Unknown");
+                r.setAvatar(null);
+            }
+        });
+
+        return responses;
     }
 
+    //    @Override
+//    public boolean checkSubmission(Integer assignmentId, String studentUsername) {
+//        return assignmentDetailRepository.existsByAssignment_IdAndStudentUsername(assignmentId, studentUsername);
+//    }
+//
     @Override
     public AssignmentDetailResponse getSubmissionOfStudent(Integer assignmentId, String studentUsername) {
-        AssignmentDetail assignmentDetail = assignmentDetailRepository.findByAssignment_IdAndStudentUsername(assignmentId, studentUsername);
-        return assignmentDetailMapper.toAssignmentResponse(assignmentDetail);
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+        AssignmentDetail assignmentDetail = assignmentDetailRepository.findByAssignment_IdAndStudentUsername(assignmentId, studentUsername)
+                .orElseThrow(() -> new RuntimeException("Student not submit yet"));
+        return assignmentDetailMapper.toAssignmentDetailResponse(assignmentDetail, assignment.getDeadline());
+    }
+
+    //
+    @Override
+    public List<AssignmentResponse> getAssignmentsByIds(ListIdRequest request) {
+        return getAssignmentResponsesFromIds(request.getIdsList());
     }
 
     @Override
-    public List<AssignmentResponse> getAssignmentsByIds(ListIdRequest request){
-        return getAssignmentResponsesFromIds(request.getIdsList());
+    public Page<AssignmentViewForStudent> getAssignmentsForStudent(String studentUsername, Integer classroomId, String status, Pageable pageable) {
+        List<String> studentsInClass = Optional.ofNullable(classroomClient
+                        .findStudentUsernamesByClassroomId(classroomId).getResult())
+                .orElseThrow(() -> new RuntimeException("Failed to retrieve students for classroom"));
+        if (!studentsInClass.contains(studentUsername)) {
+            throw new RuntimeException("Student is not enrolled in this classroom");
+        }
+
+        List<Assignment> assignments = assignmentRepository.findByClassroomId(classroomId);
+        List<AssignmentDetail> studentDetails = assignmentDetailRepository.findByStudentUsername(studentUsername);
+
+        Map<Integer, AssignmentDetail> detailMap = studentDetails.stream()
+                .collect(Collectors.toMap(detail -> detail.getAssignment().getId(), Function.identity()));
+
+        List<AssignmentViewForStudent> allViews = assignments.stream()
+                .map(assignment -> {
+                    AssignmentDetail detail = detailMap.get(assignment.getId());
+                    AssignmentResponse assignmentResponse = assignmentMapper.toAssignmentResponse(assignment);
+                    AssignmentViewForStudent view = AssignmentViewForStudent.builder()
+                            .assignment(assignmentResponse)
+                            .build();
+
+                    if (detail != null) {
+                        AssignmentDetailResponse detailResponse = assignmentDetailMapper.toAssignmentDetailResponse(detail, assignment.getDeadline());
+                        view.setSubmission(detailResponse);
+                        view.setStatus(detailResponse.getStatus() == AssignmentDetailStatus.LATE ? AssignmentSubmitStatus.LATE : AssignmentSubmitStatus.SUBMITTED);
+                    } else {
+                        view.setStatus(AssignmentSubmitStatus.NOT_SUBMITTED);
+                        view.setSubmission(null);
+                    }
+                    return view;
+                })
+                .filter(view -> status == null || view.getStatus().name().equalsIgnoreCase(status))
+                .collect(Collectors.toList());
+
+        // Sort and paginate (assuming pageable has sort by deadline desc as example)
+        if (pageable.getSort().isSorted()) {
+            // Implement sort based on Sort object, e.g., by deadline
+            allViews.sort(Comparator.comparing(v -> v.getAssignment().getDeadline(), Comparator.reverseOrder()));
+        }
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), allViews.size());
+        List<AssignmentViewForStudent> pageContent = allViews.subList(start, end);
+
+        return new PageImpl<>(pageContent, pageable, allViews.size());
     }
 
     public List<AssignmentResponse> getAssignmentResponsesFromIds(List<Integer> assignmentIds) {
@@ -192,7 +309,7 @@ public class AssignmentServiceImpl implements AssignmentService {
                     Assignment assignment = assignmentMap.get(id);
                     return assignment != null ? assignmentMapper.toAssignmentResponse(assignment) : null;
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 }
-
