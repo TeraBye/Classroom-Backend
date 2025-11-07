@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface AssignmentRepository extends JpaRepository<Assignment, Integer> {
     List<Assignment> findByIdIn(List<Integer> ids);
+
+    List<Assignment> findByClassroomId(Integer classroomId);
 }

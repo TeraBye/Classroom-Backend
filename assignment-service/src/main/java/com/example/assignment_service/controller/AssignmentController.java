@@ -4,9 +4,7 @@ import com.example.assignment_service.dto.request.AssignmentCreateRequest;
 import com.example.assignment_service.dto.request.AssignmentSubmitRequest;
 import com.example.assignment_service.dto.request.AssignmentUpdateRequest;
 import com.example.assignment_service.dto.request.ListIdRequest;
-import com.example.assignment_service.dto.response.ApiResponse;
-import com.example.assignment_service.dto.response.AssignmentDetailResponse;
-import com.example.assignment_service.dto.response.AssignmentResponse;
+import com.example.assignment_service.dto.response.*;
 import com.example.assignment_service.service.AssignmentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -14,6 +12,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -74,7 +73,6 @@ public class AssignmentController {
 
     @PostMapping("/submit")
     public ApiResponse<AssignmentDetailResponse> submitAssignment(
-//            @ModelAttribute được sử dụng khi gửi dữ liệu dạng multipart/form-data
             @Valid @RequestBody AssignmentSubmitRequest request) throws GeneralSecurityException, IOException {
         return ApiResponse.<AssignmentDetailResponse>builder()
                 .result(assignmentService.submitAssignment(request))
@@ -82,26 +80,26 @@ public class AssignmentController {
     }
 
     @GetMapping("/{assignmentId}/submissions")
-    public ApiResponse<Page<AssignmentDetailResponse>> getSubmissions(
+    public ApiResponse<Page<StudentAssignmentViewResponse>> getSubmissions(
             @PathVariable Integer assignmentId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            String status,
+            Pageable pageable
     ) {
-        return ApiResponse.<Page<AssignmentDetailResponse>>builder()
-                .result(assignmentService.getSubmissionsByAssignment(assignmentId, page, size))
+        return ApiResponse.<Page<StudentAssignmentViewResponse>>builder()
+                .result(assignmentService.getSubmissionsByAssignment(assignmentId, status, pageable))
                 .build();
     }
 
-    @GetMapping("/{assignmentId}/check-submitted")
-    public ApiResponse<Boolean> checkSubmitted(
-            @PathVariable Integer assignmentId,
-            @RequestParam String studentUsername
-    ) {
-        return ApiResponse.<Boolean>builder()
-                .result(assignmentService.checkSubmission(assignmentId, studentUsername))
-                .build();
-    }
-
+    //    @GetMapping("/{assignmentId}/check-submitted")
+//    public ApiResponse<Boolean> checkSubmitted(
+//            @PathVariable Integer assignmentId,
+//            @RequestParam String studentUsername
+//    ) {
+//        return ApiResponse.<Boolean>builder()
+//                .result(assignmentService.checkSubmission(assignmentId, studentUsername))
+//                .build();
+//    }
+//
     @GetMapping("/{assignmentId}/get-submission")
     public ApiResponse<AssignmentDetailResponse> getSubmission(
             @PathVariable Integer assignmentId,
@@ -112,4 +110,15 @@ public class AssignmentController {
                 .build();
     }
 
+    @GetMapping("/student")
+    public ApiResponse<Page<AssignmentViewForStudent>> getAssignmentsForStudent(
+            @RequestParam String studentUsername,
+            @RequestParam Integer classroomId,
+            @RequestParam(required = false) String status,
+            Pageable pageable) {
+        Page<AssignmentViewForStudent> page = assignmentService.getAssignmentsForStudent(studentUsername, classroomId, status, pageable);
+        return ApiResponse.<Page<AssignmentViewForStudent>>builder()
+                .result(page)
+                .build();
+    }
 }
