@@ -12,3 +12,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+app:
+  services:
+    profile: http://localhost:8081/api/profile
+    classroom: http://localhost:8084/api/classrooms
