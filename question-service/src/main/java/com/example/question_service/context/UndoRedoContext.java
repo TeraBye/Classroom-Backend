@@ -31,14 +31,14 @@ public class UndoRedoContext {
     }
 
     public synchronized QuestionAction popUndo() {
-        QuestionAction action = undoStack.poll(); // dùng poll vì khi stack rỗng thì sẽ trả null, pop ném ngoại lệ => try/catch khi dùng pop, poll chỉ cần ktra null
+        QuestionAction action = undoStack.pollFirst(); // dùng poll vì khi stack rỗng thì sẽ trả null, pop ném ngoại lệ => try/catch khi dùng pop, poll chỉ cần ktra null
         if (action != null)
             redoStack.push(action);
         return action;
     }
 
     public synchronized QuestionAction popRedo() {
-        QuestionAction action = redoStack.poll();
+        QuestionAction action = redoStack.pollFirst();
         if (action != null)
             undoStack.push(action);
         return action;

@@ -8,12 +8,12 @@ import java.time.LocalDateTime;
 
 @Builder
 @Entity
-@Table(name = "logging")
+@Table(name = "audit_logs")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class Logging {
+public class AuditLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,15 +23,12 @@ public class Logging {
 
     private String role;
 
-    private String service;
-
     private String action;
+
+    private String description;
 
     private LocalDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
+    private LocalDateTime updatedAt;
 
 }

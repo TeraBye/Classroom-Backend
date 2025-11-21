@@ -1,0 +1,37 @@
+server:
+  port: 8092
+  servlet:
+    context-path: /api/imports
+spring:
+  application:
+    name: import-service
+  datasource:
+    url: "jdbc:mysql://localhost:3306/import_service"
+    username: root
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: import-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.type.mapping: >
+          com.example.question_service.event.ImportResultEvent:com.example.import_service.event.ImportResultEvent,
+          com.example.import_service.event.ImportEvent:com.example.import_service.event.ImportEvent
+app:
+  kafka:
+    topic:
+      question: import.question

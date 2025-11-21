@@ -7,6 +7,7 @@ import com.example.exam_service.dto.response.QuestionInUnstartedExamCheck;
 import com.example.exam_service.dto.response.QuestionResponse;
 import com.example.exam_service.entity.Exam;
 import com.example.exam_service.entity.ExamQuestion;
+import com.example.exam_service.event.AuditLogEvent;
 import com.example.exam_service.mapper.ExamMapper;
 import com.example.exam_service.repository.ExamQuestionRepository;
 import com.example.exam_service.repository.ExamRepository;
@@ -16,12 +17,14 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class ExamServiceImpl implements ExamService {
     ExamQuestionRepository examQuestionRepository;
     ExamMapper examMapper;
     QuestionClient questionClient;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public ExamViewResponse createExam(ExamCreationRequest request) {
@@ -45,6 +49,14 @@ public class ExamServiceImpl implements ExamService {
             exam = examRepository.save(exam);
 
             createExamQuestions(exam, questions);
+
+            AuditLogEvent logEvent = new AuditLogEvent(
+                    request.getTeacher(),
+                    "TEACHER",
+                    "CREATE EXAM",
+                    "Created exam with ID: " + exam.getId()
+            );
+            kafkaTemplate.send("audit.log", logEvent);
 
             return ExamViewResponse.builder()
                     .exam(exam)

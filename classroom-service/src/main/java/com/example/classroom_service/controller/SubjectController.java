@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,9 +31,11 @@ public class SubjectController {
     }
 
     @GetMapping
-    public ApiResponse<List<SubjectResponse>> getAllSubjects() {
-        return ApiResponse.<List<SubjectResponse>>builder()
-                .result(subjectService.getAllSubjects())
+    public ApiResponse<Page<SubjectResponse>> getSubjects(
+            @RequestParam(required = false) String username,
+            Pageable pageable) {
+        return ApiResponse.<Page<SubjectResponse>>builder()
+                .result(subjectService.getSubjects(username, pageable))
                 .build();
     }
 

@@ -2,6 +2,7 @@ package com.example.question_service.service.Impl;
 
 import com.example.question_service.dto.request.QuestionCreateRequest;
 import com.example.question_service.dto.request.QuestionIdsRequest;
+import com.example.question_service.dto.request.QuestionSearchRequest;
 import com.example.question_service.dto.request.QuestionUpdateRequest;
 import com.example.question_service.dto.response.ClassListResponse;
 import com.example.question_service.dto.response.QuestionPagingResponse;
@@ -12,6 +13,7 @@ import com.example.question_service.entity.QuestionAction;
 import com.example.question_service.entity.QuestionVersion;
 import com.example.question_service.enums.ActionType;
 import com.example.question_service.enums.Level;
+import com.example.question_service.event.AuditLogEvent;
 import com.example.question_service.exception.BusinessException;
 import com.example.question_service.mapper.QuestionMapper;
 import com.example.question_service.repository.QuestionRepository;
@@ -20,13 +22,12 @@ import com.example.question_service.repository.http.ExamClient;
 import com.example.question_service.service.QuestionHistoryService;
 import com.example.question_service.repository.http.ClassroomClient;
 import com.example.question_service.service.QuestionService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,9 +44,9 @@ public class QuestionServiceImpl implements QuestionService {
     QuestionVersionRepository versionRepository;
     QuestionMapper questionMapper;
     QuestionHistoryService questionHistoryService;
-    ObjectMapper objectMapper;
     ClassroomClient classroomClient;
     ExamClient examClient;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     @Transactional
@@ -60,28 +61,29 @@ public class QuestionServiceImpl implements QuestionService {
         version.setVersion(1);
         version.setCreatedAt(LocalDateTime.now());
         versionRepository.save(version);
+        question.getVersions().add(version);
 
-        questionHistoryService.pushAction(request.getUsername(), new QuestionAction(ActionType.CREATE, null, question));
+        Question afterState = questionMapper.cloneQuestionState(question);
+        questionHistoryService.pushAction(request.getUsername(), QuestionAction.builder()
+                .type(ActionType.CREATE)
+                .before(null)
+                .after(afterState)
+                .build());
+
+        AuditLogEvent logEvent = new AuditLogEvent(
+                request.getUsername(),
+                "TEACHER",
+                "CREATE QUESTION",
+                "Created new question with ID: " + question.getId() + " for subject with ID: " + request.getSubjectId()
+        );
+        kafkaTemplate.send("audit.log", logEvent);
         return questionMapper.toQuestionResponse(question);
 
-    }
-
-    @Override
-    public QuestionResponse getQuestionById(int questionId) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
-        return questionMapper.toQuestionResponse(question);
-    }
-
-    @Override
-    public List<QuestionResponse> getAllQuestions() {
-        List<Question> questions = questionRepository.findAll();
-        return questionMapper.toQuestionResponses(questions);
     }
 
     @Override
     @Transactional
-    public QuestionResponse updateQuestion(int questionId, QuestionUpdateRequest request) throws JsonProcessingException {
+    public QuestionResponse updateQuestion(int questionId, QuestionUpdateRequest request) {
         Question existing = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
 
@@ -93,52 +95,60 @@ public class QuestionServiceImpl implements QuestionService {
             throw new BusinessException("Do not have permission");
         }
 
-        int latestVersion = existing.getVersions().stream()
-                .mapToInt(QuestionVersion::getVersion)
-                .max()
-                .orElse(0);
+        Question beforeState = questionMapper.cloneQuestionState(existing);
 
-        Question before = objectMapper.readValue(objectMapper.writeValueAsString(existing), Question.class);
         questionMapper.updateQuestion(request, existing);
-//        existing.setContent(request.getContent());
-//        existing.setOptionA(request.getOptionA());
-//        existing.setOptionB(request.getOptionB());
-//        existing.setOptionC(request.getOptionC());
-//        existing.setOptionD(request.getOptionD());
-//        existing.setCorrectAnswer(request.getCorrectAnswer());
-//        existing.setExplanation(request.getExplanation());
-//        existing.setLevel(request.getLevel());
-//        existing.setUsername(request.getUsername());
-//        existing.setSubjectId(request.getSubjectId());
-
         existing.setUpdatedAt(LocalDateTime.now());
 
-        QuestionVersion version = questionMapper.toQuestionVersion(existing);
-        version.setQuestion(existing);
-        version.setVersion(latestVersion + 1);
-        version.setUpdatedBy(request.getUsername());
-        version.setCreatedAt(LocalDateTime.now());
-        versionRepository.save(version);
+        createNewVersion(existing, request.getUsername());
 
-        questionHistoryService.pushAction(request.getUsername(), new QuestionAction(ActionType.UPDATE, before, existing));
+        Question afterState = questionMapper.cloneQuestionState(existing);
+
+        questionHistoryService.pushAction(request.getUsername(), QuestionAction.builder()
+                .type(ActionType.UPDATE)
+                .before(beforeState)
+                .after(afterState)
+                .build());
+
+        AuditLogEvent logEvent = new AuditLogEvent(
+                request.getUsername(),
+                "TEACHER",
+                "UPDATE QUESTION",
+                "Updated question with ID: " + questionId + ". Request: " + request.toString()
+        );
+        kafkaTemplate.send("audit.log", logEvent);
+
         return questionMapper.toQuestionResponse(questionRepository.save(existing));
     }
 
     @Override
     @Transactional
     public void deleteQuestion(int questionId, String username) {
-        Question before = questionRepository.findById(questionId)
+        Question existing = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
 
         if (examClient.isQuestionInUnstartedExam(questionId).getResult().getIsInUnstartedExam()) {
             throw new BusinessException("Cannot delete question as it is part of an unstarted exam");
         }
 
-        if (!username.equals(before.getUsername())) {
+        if (!username.equals(existing.getUsername())) {
             throw new BusinessException("Do not have permission");
         }
+        Question beforeState = questionMapper.cloneQuestionState(existing);
         questionRepository.deleteById(questionId);
-        questionHistoryService.pushAction(username, new QuestionAction(ActionType.DELETE, before, null));
+        questionHistoryService.pushAction(username, QuestionAction.builder()
+                .type(ActionType.DELETE)
+                .before(beforeState)
+                .after(null)
+                .build());
+
+        AuditLogEvent logEvent = new AuditLogEvent(
+                username,
+                "TEACHER",
+                "DELETE QUESTION",
+                "Deleted question with ID: " + questionId
+        );
+        kafkaTemplate.send("audit.log", logEvent);
     }
 
     @Override
@@ -147,10 +157,11 @@ public class QuestionServiceImpl implements QuestionService {
         Optional<QuestionAction> actionOptional = questionHistoryService.undo(username);
         if (actionOptional.isEmpty()) return "Nothing to undo";
         QuestionAction action = actionOptional.get();
+
         switch (action.getType()) {
             case CREATE -> {
                 Question after = action.getAfter();
-                if (after.getId() != null && questionRepository.existsById(after.getId())) {
+                if (after != null && after.getId() != null && questionRepository.existsById(after.getId())) {
                     questionRepository.deleteById(after.getId());
                 }
             }
@@ -158,23 +169,25 @@ public class QuestionServiceImpl implements QuestionService {
                 Question before = action.getBefore();
                 Question existing = questionRepository.findById(before.getId())
                         .orElseThrow(() -> new RuntimeException("Cannot undo update: entity missing"));
-                existing.setContent(before.getContent());
-                existing.setOptionA(before.getOptionA());
-                existing.setOptionB(before.getOptionB());
-                existing.setOptionC(before.getOptionC());
-                existing.setOptionD(before.getOptionD());
-                existing.setCorrectAnswer(before.getCorrectAnswer());
-                existing.setExplanation(before.getExplanation());
-                existing.setLevel(before.getLevel());
+                questionMapper.updateQuestion(before, existing);
                 existing.setUpdatedAt(LocalDateTime.now());
-                existing.setUsername(before.getUsername());
-                existing.setSubjectId(before.getSubjectId());
                 questionRepository.save(existing);
+                createNewVersion(existing, username);
             }
             case DELETE -> {
+//                Question stateToRestore = action.getBefore();
+//                // Clear stale versions from the snapshot before saving
+//                stateToRestore.setVersions(new ArrayList<>());
+//                questionRepository.save(stateToRestore);
+//                createNewVersion(stateToRestore, username);
                 Question before = action.getBefore();
-                before.setId(null);
-                questionRepository.save(before);
+                if (before != null) {
+                    // Lưu ID gốc
+                    Integer originalId = before.getId();
+                    before.setId(originalId);
+                    questionRepository.save(before);
+                    createNewVersion(before, username);
+                }
             }
         }
         return "Undo " + action.getType() + " successfully";
@@ -188,30 +201,32 @@ public class QuestionServiceImpl implements QuestionService {
         QuestionAction action = actionOptional.get();
         switch (action.getType()) {
             case CREATE -> {
+//                Question stateToRestore = action.getAfter();
+//                // Clear stale versions from the snapshot before saving
+//                stateToRestore.setVersions(new ArrayList<>());
+//                questionRepository.save(stateToRestore);
+//                createNewVersion(stateToRestore, username);
                 Question after = action.getAfter();
-                after.setId(null);
-                questionRepository.save(after);
+                if (after != null) {
+                    // Lưu ID gốc để đảm bảo consistency
+                    Integer originalId = after.getId();
+                    after.setId(originalId);
+                    questionRepository.save(after);
+                    createNewVersion(after, username);
+                }
             }
             case UPDATE -> {
                 Question after = action.getAfter();
                 Question existing = questionRepository.findById(after.getId())
                         .orElseThrow(() -> new RuntimeException("Cannot redo update: entity missing"));
-                existing.setContent(after.getContent());
-                existing.setOptionA(after.getOptionA());
-                existing.setOptionB(after.getOptionB());
-                existing.setOptionC(after.getOptionC());
-                existing.setOptionD(after.getOptionD());
-                existing.setCorrectAnswer(after.getCorrectAnswer());
-                existing.setExplanation(after.getExplanation());
-                existing.setLevel(after.getLevel());
+                questionMapper.updateQuestion(after, existing);
                 existing.setUpdatedAt(LocalDateTime.now());
-                existing.setUsername(after.getUsername());
-                existing.setSubjectId(after.getSubjectId());
                 questionRepository.save(existing);
+                createNewVersion(existing, username);
             }
             case DELETE -> {
                 Question before = action.getBefore();
-                if (before.getId() != null && questionRepository.existsById(before.getId())) {
+                if (before != null && before.getId() != null && questionRepository.existsById(before.getId())) {
                     questionRepository.deleteById(before.getId());
                 }
             }
@@ -223,6 +238,14 @@ public class QuestionServiceImpl implements QuestionService {
     public List<QuestionResponse> getQuestionsBySubjectId(int subjectId) {
         List<Question> questions = questionRepository.findBySubjectId(subjectId);
         return questionMapper.toQuestionResponses(questions);
+    }
+
+    @Override
+    public QuestionPagingResponse<QuestionResponse> getPageQuestion(Integer subjectId, QuestionSearchRequest request, Pageable pageable) {
+        List<Question> questionList = questionRepository.findNextPageWithFilters(subjectId, request.getLevel(), request.getKeyword(), request.getCursor(), pageable.getPageSize());
+        boolean hasNext = questionList.size() == pageable.getPageSize();
+        int lastCursor = questionList.isEmpty() ? request.getCursor() : questionList.get(questionList.size() - 1).getId();
+        return new QuestionPagingResponse<>(questionMapper.toQuestionResponses(questionList), lastCursor, hasNext);
     }
 
     @Override
@@ -311,10 +334,23 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public void deleteQuestionById(int questionId){
+    public void deleteQuestionById(int questionId) {
         Question before = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found with ID: " + questionId));
 
         questionRepository.deleteById(questionId);
+    }
+
+    private void createNewVersion(Question question, String updatedBy) {
+        Integer maxVersion = versionRepository.findMaxVersionByQuestionId(question.getId());
+        int latest = (maxVersion != null) ? maxVersion : 0;
+
+        QuestionVersion newVersion = questionMapper.toQuestionVersion(question);
+        newVersion.setQuestion(question);
+        newVersion.setVersion(latest + 1);
+        newVersion.setUpdatedBy(updatedBy);
+        newVersion.setCreatedAt(LocalDateTime.now());
+        versionRepository.save(newVersion);
+        question.getVersions().add(newVersion);
     }
 }

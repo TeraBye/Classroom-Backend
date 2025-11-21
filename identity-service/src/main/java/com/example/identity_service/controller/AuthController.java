@@ -2,17 +2,11 @@ package com.example.identity_service.controller;
 
 import java.text.ParseException;
 
+import com.example.identity_service.dto.request.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.example.identity_service.dto.request.AuthRequest;
-import com.example.identity_service.dto.request.IntrospectRequest;
-import com.example.identity_service.dto.request.LogoutRequest;
-import com.example.identity_service.dto.request.RefreshRequest;
 import com.example.identity_service.dto.response.ApiResponse;
 import com.example.identity_service.dto.response.AuthResponse;
 import com.example.identity_service.dto.response.IntrospectResponse;
@@ -56,10 +50,10 @@ public class AuthController {
     }
 
     @PostMapping("/admin-login")
-    ApiResponse<AuthResponse> loginByAdmin(@RequestBody AuthRequest authRequest, HttpServletResponse response){
+    ApiResponse<AuthResponse> loginByAdmin(@RequestBody AuthRequest authRequest, HttpServletResponse response) {
         var result = authService.authenticate(authRequest);
         String token = result.getToken();
-        Cookie cookie = new Cookie("token",token);
+        Cookie cookie = new Cookie("token", token);
         cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setMaxAge(7 * 24 * 60 * 60); // 7 ngày
@@ -68,5 +62,23 @@ public class AuthController {
         result.setToken("");  // ẩn token
         response.addCookie(cookie);
         return ApiResponse.<AuthResponse>builder().result(result).build();
+    }
+
+    @PostMapping("/forgot-password")
+    ApiResponse<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ApiResponse.<Void>builder().build();
+    }
+
+    @PostMapping("/reset-password")
+    ApiResponse<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ApiResponse.<Void>builder().build();
+    }
+
+    @PatchMapping("/change-password")
+    ApiResponse<Void> changePassword(@RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request);
+        return ApiResponse.<Void>builder().build();
     }
 }

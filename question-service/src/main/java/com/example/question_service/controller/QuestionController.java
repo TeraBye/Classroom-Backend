@@ -2,6 +2,7 @@ package com.example.question_service.controller;
 
 import com.example.question_service.dto.request.QuestionCreateRequest;
 import com.example.question_service.dto.request.QuestionIdsRequest;
+import com.example.question_service.dto.request.QuestionSearchRequest;
 import com.example.question_service.dto.request.QuestionUpdateRequest;
 import com.example.question_service.dto.response.ApiResponse;
 import com.example.question_service.dto.response.ClassListResponse;
@@ -31,20 +32,6 @@ public class QuestionController {
     public ApiResponse<QuestionResponse> createQuestion(@RequestBody @Valid QuestionCreateRequest request) {
         return ApiResponse.<QuestionResponse>builder()
                 .result(questionService.createQuestion(request))
-                .build();
-    }
-
-    @GetMapping
-    public ApiResponse<List<QuestionResponse>> getAllQuestions() {
-        return ApiResponse.<List<QuestionResponse>>builder()
-                .result(questionService.getAllQuestions())
-                .build();
-    }
-
-    @GetMapping("/{questionId}")
-    public ApiResponse<QuestionResponse> getQuestionById(@PathVariable int questionId) {
-        return ApiResponse.<QuestionResponse>builder()
-                .result(questionService.getQuestionById(questionId))
                 .build();
     }
 
@@ -92,9 +79,12 @@ public class QuestionController {
     }
 
     @GetMapping("/get-by-subject/{subjectId}")
-    public ApiResponse<List<QuestionResponse>> getQuestionBySubjectId(@PathVariable int subjectId) {
-        return ApiResponse.<List<QuestionResponse>>builder()
-                .result(questionService.getQuestionsBySubjectId(subjectId))
+    public ApiResponse<QuestionPagingResponse<QuestionResponse>> getQuestionBySubjectId(
+            @PathVariable int subjectId,
+            QuestionSearchRequest request,
+            Pageable pageable) {
+        return ApiResponse.<QuestionPagingResponse<QuestionResponse>>builder()
+                .result(questionService.getPageQuestion(subjectId, request, pageable))
                 .build();
     }
 

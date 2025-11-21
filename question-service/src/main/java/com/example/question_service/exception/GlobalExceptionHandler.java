@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
     // Lỗi business logic: custom BadRequestException
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<String>> handleBadRequest(BusinessException ex) {
-        return ResponseEntity.status(HttpStatus.OK).body(
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 ApiResponse.<String>builder()
                         .code(4003)
                         .message(ex.getMessage())
