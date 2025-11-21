@@ -147,6 +147,7 @@ public class UserProfileServiceImpl implements UserProfileService {
         userProfile.setFullName(request.getFullName());
         userProfile.setEmail(request.getEmail());
         userProfile.setDob(request.getDob());
+        userProfile.setAvatar(request.getAvatar());
 
         UserProfile saved = userProfileRepository.save(userProfile);
         return userProfileMapper.toUserProfileResponse(saved);

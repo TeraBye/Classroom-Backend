@@ -17,6 +17,9 @@ public enum ErrorCode {
     UNAUTHENTICATED("unauthenticated", 1006, HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED("You do not have permission", 1007, HttpStatus.FORBIDDEN),
     INVALID_DOB("Your age must at least {min}", 1008, HttpStatus.BAD_REQUEST),
+    INVALID_TOKEN("Invalid token", 1009, HttpStatus.BAD_REQUEST),
+    TOKEN_EXPIRED("Token expired", 1010, HttpStatus.BAD_REQUEST),
+    WRONG_PASSWORD("Wrong password", 1011, HttpStatus.BAD_REQUEST),
     ;
 
     private final String message;

@@ -8,6 +8,7 @@ import com.example.classroom_service.entity.Classroom;
 import com.example.classroom_service.entity.ClassroomDetail;
 import com.example.classroom_service.entity.Subject;
 import com.example.classroom_service.entity.TeacherSubject;
+import com.example.classroom_service.event.AuditLogEvent;
 import com.example.classroom_service.mapper.ClassroomDetailMapper;
 import com.example.classroom_service.mapper.ClassroomMapper;
 import com.example.classroom_service.repository.ClassroomDetailRepository;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +46,7 @@ public class ClassroomServiceImpl implements ClassroomService {
     ClassroomDetailMapper classroomDetailMapper;
     PostClient postClient;
     ProfileClient profileClient;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     private void fillPostNums(List<ClassroomResponse> responses) {
         if (responses.isEmpty()) return;
@@ -96,6 +99,13 @@ public class ClassroomServiceImpl implements ClassroomService {
 
         ClassroomResponse response = classroomMapper.toClassroomResponse(classroomRepository.save(classroom));
         fillTeacherNames(List.of(response));
+        AuditLogEvent logEvent = new AuditLogEvent(
+                request.getTeacherUsername(),
+                "TEACHER",
+                "CREATE CLASSROOM",
+                "Created new classroom with ID: " + response.getId() + " for subject with ID: " + request.getSubjectId()
+        );
+        kafkaTemplate.send("audit.log", logEvent);
         return response;
     }
 
@@ -149,6 +159,14 @@ public class ClassroomServiceImpl implements ClassroomService {
         ClassroomResponse response = classroomMapper.toClassroomResponse(classroom);
         fillTeacherNames(List.of(response));
         fillPostNums(List.of(response));
+
+        AuditLogEvent logEvent = new AuditLogEvent(
+                classroom.getTeacherSubject().getTeacherUsername(),
+                "TEACHER",
+                "UPDATE CLASSROOM",
+                "Updated classroom with ID: " + classroomId + ". Request: " + request.toString()
+        );
+        kafkaTemplate.send("audit.log", logEvent);
         return response;
     }
 
@@ -158,6 +176,14 @@ public class ClassroomServiceImpl implements ClassroomService {
                 .orElseThrow(() -> new RuntimeException("Classroom not found with ID: " + classroomId));
         classroom.setDeleted(true);
         classroomRepository.save(classroom);
+
+        AuditLogEvent logEvent = new AuditLogEvent(
+                classroom.getTeacherSubject().getTeacherUsername(),
+                "TEACHER",
+                "DELETE CLASSROOM",
+                "Deleted classroom with ID: " + classroomId
+        );
+        kafkaTemplate.send("audit.log", logEvent);
     }
 
     @Override
@@ -209,6 +235,14 @@ public class ClassroomServiceImpl implements ClassroomService {
 
         classroom.setDeleted(false);
         classroomRepository.save(classroom);
+
+        AuditLogEvent logEvent = new AuditLogEvent(
+                classroom.getTeacherSubject().getTeacherUsername(),
+                "TEACHER",
+                "RESTORE CLASSROOM",
+                "Restored classroom with ID: " + classroomId
+        );
+        kafkaTemplate.send("audit.log", logEvent);
     }
 
     @Override

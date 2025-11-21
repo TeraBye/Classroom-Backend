@@ -6,6 +6,7 @@ import com.example.assignment_service.entity.Assignment;
 import com.example.assignment_service.entity.AssignmentDetail;
 import com.example.assignment_service.enums.AssignmentDetailStatus;
 import com.example.assignment_service.enums.AssignmentSubmitStatus;
+import com.example.assignment_service.event.AuditLogEvent;
 import com.example.assignment_service.mapper.AssignmentDetailMapper;
 import com.example.assignment_service.mapper.AssignmentMapper;
 import com.example.assignment_service.repository.AssignmentDetailRepository;
@@ -19,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.View;
 
@@ -44,7 +46,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     AssignmentDetailMapper assignmentDetailMapper;
     ClassroomClient classroomClient;
     ProfileClient profileClient;
-    private final View view;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public AssignmentResponse createAssignment(AssignmentCreateRequest request) {
@@ -65,6 +67,13 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignment.setUsername(request.getUsername());
         assignment.setClassroomId(request.getClassroomId());
         assignment = assignmentRepository.save(assignment);
+        AuditLogEvent logEvent = new AuditLogEvent(
+                request.getUsername(),
+                "TEACHER",
+                "CREATE ASSIGNMENT",
+                "Created new assignment with ID: " + assignment.getId() + " for classroom with ID: " + request.getClassroomId()
+        );
+        kafkaTemplate.send("audit.log", logEvent);
         return assignmentMapper.toAssignmentResponse(assignment);
     }
 
@@ -81,7 +90,7 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
-    public AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request) throws GeneralSecurityException, IOException {
+    public AssignmentResponse updateAssignment(int assignmentId, AssignmentUpdateRequest request) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new RuntimeException("Assignment not found with ID: " + assignmentId));
 
@@ -90,9 +99,14 @@ public class AssignmentServiceImpl implements AssignmentService {
             assignment.setAssignmentCode(request.getUsername() + "_assignment_" + request.getDeadline());
         }
         assignmentMapper.updateAssignment(assignment, request);
-//        assignment.setFileUrl(newFileUrl);
-//        assignment.setDeadline(deadline);
         assignmentRepository.save(assignment);
+        AuditLogEvent logEvent = new AuditLogEvent(
+                request.getUsername(),
+                "TEACHER",
+                "UPDATE ASSIGNMENT",
+                "Updated assignment with ID: " + assignmentId + ". request: " + request.toString()
+        );
+        kafkaTemplate.send("audit.log", logEvent);
         return assignmentMapper.toAssignmentResponse(assignment);
     }
 

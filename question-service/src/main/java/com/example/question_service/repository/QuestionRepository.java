@@ -36,4 +36,20 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
             @Param("subjectId") Integer subjectId, @Param("cursor") int cursor, Pageable pageable);
 
     int countBySubjectId(Integer subjectId);
+
+    @Query("SELECT q FROM Question q " +
+            "WHERE (:subjectId IS NULL OR q.subjectId = :subjectId) " +
+            "AND (:level IS NULL OR q.level = :level) " +
+            "AND (:keyword IS NULL OR " +
+            "q.content LIKE CONCAT('%', :keyword, '%') OR " +
+            "q.optionA LIKE CONCAT('%', :keyword, '%') OR " +
+            "q.optionB LIKE CONCAT('%', :keyword, '%') OR " +
+            "q.optionC LIKE CONCAT('%', :keyword, '%') OR " +
+            "q.optionD LIKE CONCAT('%', :keyword, '%')) " +
+            "AND q.id > :cursor ORDER BY q.createdAt DESC")
+    List<Question> findNextPageWithFilters(@Param("subjectId") Integer subjectId,
+                                           @Param("level") Level level,
+                                           @Param("keyword") String keyword,
+                                           @Param("cursor") int cursor,
+                                           @Param("size") int size);
 }

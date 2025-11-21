@@ -17,6 +17,7 @@ public interface PostMapper {
     Post toPost(PostCreationRequest postCreationRequest);
 
     @Mapping(source = "title", target = "name")
+    @Mapping(source = "classId", target = "classroomId")
     AssignmentCreateRequest toAssignmentCreateRequest(
             PostCreationRequest request);
 

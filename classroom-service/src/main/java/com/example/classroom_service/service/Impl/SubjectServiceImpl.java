@@ -10,6 +10,8 @@ import com.example.classroom_service.service.SubjectService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -36,8 +38,9 @@ public class SubjectServiceImpl implements SubjectService {
     }
 
     @Override
-    public List<SubjectResponse> getAllSubjects() {
-        return subjectMapper.toSubjectResponses(subjectRepository.findAll());
+    public Page<SubjectResponse> getSubjects(String username, Pageable pageable) {
+        return subjectRepository.findByTeacher_Username(username, pageable)
+                .map(subjectMapper::toSubjectResponse);
     }
 
     @Override

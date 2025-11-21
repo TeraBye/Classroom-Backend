@@ -30,4 +30,6 @@ public class UpdateProfileRequest {
     @Past
     private LocalDate dob;
 
+    private String avatar;
+
 }

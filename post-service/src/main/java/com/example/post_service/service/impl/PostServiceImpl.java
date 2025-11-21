@@ -5,6 +5,7 @@ import com.example.post_service.dto.request.ListIdRequest;
 import com.example.post_service.dto.request.PostCreationRequest;
 import com.example.post_service.dto.response.*;
 import com.example.post_service.entity.Post;
+import com.example.post_service.event.AuditLogEvent;
 import com.example.post_service.mapper.PostMapper;
 import com.example.post_service.repository.PostRepository;
 import com.example.post_service.repository.httpClient.AssignmentClient;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +37,7 @@ public class PostServiceImpl implements PostService {
     AssignmentClient assignmentClient;
     PostMapper postMapper;
     SimpMessagingTemplate messagingTemplate;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public UserPostResponse createPost(PostCreationRequest request) {
@@ -63,7 +66,13 @@ public class PostServiceImpl implements PostService {
                 "/topic/posts/" + request.getClassId(),
                 response
         );
-
+        AuditLogEvent logEvent = new AuditLogEvent(
+                request.getUsername(),
+                "TEACHER",
+                "CREATE POST",
+                "Created new post with ID: " + post.getPostId()
+        );
+        kafkaTemplate.send("audit.log", logEvent);
         return response;
     }
 
