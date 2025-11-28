@@ -27,12 +27,20 @@ public class NotificationController {
                 .build();
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public ApiResponse<Void> createNotification(@RequestBody NotificationRequest request)
             throws ExecutionException, InterruptedException {
         WriteResult result = notificationService.saveNotification(request);
         return ApiResponse.<Void>builder()
                 .message("Notification created at: " + result.getUpdateTime())
+                .build();
+    }
+
+    @PostMapping("/read-all")
+    public ApiResponse<Void> markAllAsRead(@RequestParam String username) {
+        notificationService.markAllAsRead(username);
+        return ApiResponse.<Void>builder()
+                .message("Marked all as read at: " + username)
                 .build();
     }
 }

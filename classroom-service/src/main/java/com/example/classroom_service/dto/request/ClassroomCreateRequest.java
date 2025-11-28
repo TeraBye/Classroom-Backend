@@ -1,14 +1,8 @@
 package com.example.classroom_service.dto.request;
 
-import com.example.classroom_service.entity.Subject;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,6 +17,7 @@ public class ClassroomCreateRequest {
 
     String meetLink;
 
+    @JsonProperty("public")
     Boolean isPublic;
 
     String teacherUsername;

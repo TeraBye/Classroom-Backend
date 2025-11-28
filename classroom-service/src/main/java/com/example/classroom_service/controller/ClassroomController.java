@@ -1,17 +1,16 @@
 package com.example.classroom_service.controller;
 
-import com.example.classroom_service.dto.request.StudentAddRequest;
-import com.example.classroom_service.dto.request.ClassroomCreateRequest;
-import com.example.classroom_service.dto.request.ClassroomUpdateRequest;
-import com.example.classroom_service.dto.request.StudentRemoveRequest;
+import com.example.classroom_service.dto.request.*;
 import com.example.classroom_service.dto.response.*;
 import com.example.classroom_service.service.ClassroomDetailService;
 import com.example.classroom_service.service.ClassroomService;
+import com.example.classroom_service.service.JoinRequestService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +22,7 @@ import java.util.List;
 public class ClassroomController {
     ClassroomService classroomService;
     ClassroomDetailService classroomDetailService;
+    JoinRequestService joinRequestService;
 
     @PostMapping("/create")
     public ApiResponse<ClassroomResponse> createClassroom(@RequestBody ClassroomCreateRequest request) {
@@ -102,7 +102,7 @@ public class ClassroomController {
             @RequestParam(value = "size", defaultValue = "10") int size) {
 
         return ApiResponse.<Page<StudentResponse>>builder()
-                .result(classroomService.findStudentClasses(username,page,size))
+                .result(classroomService.findStudentClasses(username, page, size))
                 .build();
     }
 
@@ -141,9 +141,30 @@ public class ClassroomController {
     }
 
     @PostMapping("/get-list-class")
-    ApiResponse<List<Integer>> getListClass(){
+    ApiResponse<List<Integer>> getListClass() {
         return ApiResponse.<List<Integer>>builder()
                 .result(classroomService.getListClass())
+                .build();
+    }
+
+    @GetMapping("/{classroomId}/join-requests")
+    public ApiResponse<Page<JoinRequestResponse>> getJoinRequests(
+            SearchJoinRequest request,
+            Pageable pageable
+    ) {
+        return ApiResponse.<Page<JoinRequestResponse>>builder()
+                .result(joinRequestService.getRequests(request, pageable))
+                .build();
+    }
+
+    @PatchMapping("/{classroomId}/join-requests/{requestId}")
+    public ApiResponse<JoinRequestResponse> updateStatus(
+            @PathVariable("classroomId") Integer classroomId,
+            @RequestBody UpdateJoinRequest updateJoinRequest,
+            @PathVariable("requestId") Integer requestId
+    ) {
+        return ApiResponse.<JoinRequestResponse>builder()
+                .result(joinRequestService.updateStatus(requestId, updateJoinRequest))
                 .build();
     }
 }

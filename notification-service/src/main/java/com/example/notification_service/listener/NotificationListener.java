@@ -1,7 +1,6 @@
 package com.example.notification_service.listener;
 
 import com.example.notification_service.dto.request.NotificationRequest;
-import com.example.notification_service.entity.Notification;
 import com.example.notification_service.repository.httpclient.ClassroomClient;
 import com.example.notification_service.service.NotificationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -44,7 +43,7 @@ public class NotificationListener {
         }
 
         for (String username : allUsernames) {
-            messagingTemplate.convertAndSend("/topic/notifications" + username, senderUsername);
+            messagingTemplate.convertAndSend("/topic/notifications/" + username, data);
         }
 
         if (!allUsernames.isEmpty()) {

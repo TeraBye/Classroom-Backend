@@ -53,6 +53,7 @@ public class QuestionServiceImpl implements QuestionService {
     public QuestionResponse createQuestion(QuestionCreateRequest request) {
         Question question = questionMapper.toQuestion(request);
         question.setCreatedAt(LocalDateTime.now());
+        question.setUpdatedAt(LocalDateTime.now());
         questionRepository.save(question);
 
         QuestionVersion version = questionMapper.toQuestionVersionFromCreateRequest(request);
@@ -61,13 +62,12 @@ public class QuestionServiceImpl implements QuestionService {
         version.setVersion(1);
         version.setCreatedAt(LocalDateTime.now());
         versionRepository.save(version);
-        question.getVersions().add(version);
 
-        Question afterState = questionMapper.cloneQuestionState(question);
         questionHistoryService.pushAction(request.getUsername(), QuestionAction.builder()
                 .type(ActionType.CREATE)
-                .before(null)
-                .after(afterState)
+                .questionId(question.getId())
+                .fromVersion(null)
+                .toVersion(1)
                 .build());
 
         AuditLogEvent logEvent = new AuditLogEvent(
@@ -95,19 +95,21 @@ public class QuestionServiceImpl implements QuestionService {
             throw new BusinessException("Do not have permission");
         }
 
-        Question beforeState = questionMapper.cloneQuestionState(existing);
+        Integer currentVersion = versionRepository.findMaxVersionByQuestionId(questionId);
+        if (currentVersion == null) currentVersion = 0;
 
         questionMapper.updateQuestion(request, existing);
         existing.setUpdatedAt(LocalDateTime.now());
+        questionRepository.save(existing);
 
+       int newVersion = currentVersion + 1;
         createNewVersion(existing, request.getUsername());
-
-        Question afterState = questionMapper.cloneQuestionState(existing);
 
         questionHistoryService.pushAction(request.getUsername(), QuestionAction.builder()
                 .type(ActionType.UPDATE)
-                .before(beforeState)
-                .after(afterState)
+                .questionId(questionId)
+                .fromVersion(currentVersion)
+                .toVersion(newVersion)
                 .build());
 
         AuditLogEvent logEvent = new AuditLogEvent(
@@ -118,7 +120,7 @@ public class QuestionServiceImpl implements QuestionService {
         );
         kafkaTemplate.send("audit.log", logEvent);
 
-        return questionMapper.toQuestionResponse(questionRepository.save(existing));
+        return questionMapper.toQuestionResponse(existing);
     }
 
     @Override
@@ -134,12 +136,18 @@ public class QuestionServiceImpl implements QuestionService {
         if (!username.equals(existing.getUsername())) {
             throw new BusinessException("Do not have permission");
         }
-        Question beforeState = questionMapper.cloneQuestionState(existing);
-        questionRepository.deleteById(questionId);
+
+        Integer currentVersion = versionRepository.findMaxVersionByQuestionId(questionId);
+
+        existing.setDeleted(true);
+        existing.setUpdatedAt(LocalDateTime.now());
+        questionRepository.save(existing);
+
         questionHistoryService.pushAction(username, QuestionAction.builder()
                 .type(ActionType.DELETE)
-                .before(beforeState)
-                .after(null)
+                .questionId(questionId)
+                .fromVersion(currentVersion)
+                .toVersion(null)
                 .build());
 
         AuditLogEvent logEvent = new AuditLogEvent(
@@ -157,37 +165,38 @@ public class QuestionServiceImpl implements QuestionService {
         Optional<QuestionAction> actionOptional = questionHistoryService.undo(username);
         if (actionOptional.isEmpty()) return "Nothing to undo";
         QuestionAction action = actionOptional.get();
+        Integer qid = action.getQuestionId();
 
         switch (action.getType()) {
             case CREATE -> {
-                Question after = action.getAfter();
-                if (after != null && after.getId() != null && questionRepository.existsById(after.getId())) {
-                    questionRepository.deleteById(after.getId());
-                }
+                Question question = questionRepository.findById(qid)
+                        .orElseThrow(() -> new RuntimeException("Question not found with ID: " + qid));
+                question.setDeleted(true);
+                question.setUpdatedAt(LocalDateTime.now());
+                questionRepository.save(question);
             }
             case UPDATE -> {
-                Question before = action.getBefore();
-                Question existing = questionRepository.findById(before.getId())
-                        .orElseThrow(() -> new RuntimeException("Cannot undo update: entity missing"));
-                questionMapper.updateQuestion(before, existing);
-                existing.setUpdatedAt(LocalDateTime.now());
-                questionRepository.save(existing);
-                createNewVersion(existing, username);
+                Integer restoreVersion = action.getFromVersion();
+                Question question = questionRepository.findById(qid)
+                        .orElseThrow(() -> new RuntimeException("Question not found"));
+
+                QuestionVersion version = versionRepository
+                        .findByQuestion_IdAndVersion(qid, restoreVersion)
+                        .orElseThrow(() -> new RuntimeException("Version not found: " + restoreVersion));
+
+                questionMapper.updateFromVersion(version, question);
+                question.setUpdatedAt(LocalDateTime.now());
+
+                questionRepository.save(question);
+                createNewVersion(question, username);
             }
             case DELETE -> {
-//                Question stateToRestore = action.getBefore();
-//                // Clear stale versions from the snapshot before saving
-//                stateToRestore.setVersions(new ArrayList<>());
-//                questionRepository.save(stateToRestore);
-//                createNewVersion(stateToRestore, username);
-                Question before = action.getBefore();
-                if (before != null) {
-                    // Lưu ID gốc
-                    Integer originalId = before.getId();
-                    before.setId(originalId);
-                    questionRepository.save(before);
-                    createNewVersion(before, username);
-                }
+                Question question = questionRepository.findById(qid)
+                        .orElseThrow(() -> new RuntimeException("Question not found with ID: " + qid));
+                question.setDeleted(false);
+                question.setUpdatedAt(LocalDateTime.now());
+                questionRepository.save(question);
+                createNewVersion(question, username);
             }
         }
         return "Undo " + action.getType() + " successfully";
@@ -199,36 +208,42 @@ public class QuestionServiceImpl implements QuestionService {
         Optional<QuestionAction> actionOptional = questionHistoryService.redo(username);
         if (actionOptional.isEmpty()) return "Nothing to redo";
         QuestionAction action = actionOptional.get();
+        Integer qid = action.getQuestionId();
+
         switch (action.getType()) {
-            case CREATE -> {
-//                Question stateToRestore = action.getAfter();
-//                // Clear stale versions from the snapshot before saving
-//                stateToRestore.setVersions(new ArrayList<>());
-//                questionRepository.save(stateToRestore);
-//                createNewVersion(stateToRestore, username);
-                Question after = action.getAfter();
-                if (after != null) {
-                    // Lưu ID gốc để đảm bảo consistency
-                    Integer originalId = after.getId();
-                    after.setId(originalId);
-                    questionRepository.save(after);
-                    createNewVersion(after, username);
+            case CREATE, UPDATE -> {
+                Integer targetVersion = action.getToVersion();
+                if (targetVersion == null) {
+                    questionRepository.deleteById(qid);
+                    return "Redo delete successfully";
                 }
-            }
-            case UPDATE -> {
-                Question after = action.getAfter();
-                Question existing = questionRepository.findById(after.getId())
-                        .orElseThrow(() -> new RuntimeException("Cannot redo update: entity missing"));
-                questionMapper.updateQuestion(after, existing);
-                existing.setUpdatedAt(LocalDateTime.now());
-                questionRepository.save(existing);
-                createNewVersion(existing, username);
+
+                Question question = questionRepository.findById(qid)
+                        .orElseGet(() -> {
+                            Question q = new Question();
+                            q.setId(qid);
+                            return q;
+                        });
+
+                QuestionVersion version = versionRepository
+                        .findByQuestion_IdAndVersion(qid, targetVersion)
+                        .orElseThrow(() -> new RuntimeException("Version not found: " + targetVersion));
+
+                questionMapper.updateFromVersion(version, question);
+                question.setUpdatedAt(LocalDateTime.now());
+                if (question.getCreatedAt() == null) {
+                    question.setCreatedAt(version.getCreatedAt());
+                }
+
+                Question saved = questionRepository.save(question);
+                createNewVersion(saved, username);
             }
             case DELETE -> {
-                Question before = action.getBefore();
-                if (before != null && before.getId() != null && questionRepository.existsById(before.getId())) {
-                    questionRepository.deleteById(before.getId());
-                }
+                Question question = questionRepository.findById(qid)
+                        .orElseThrow(() -> new RuntimeException("Question not found"));
+                question.setDeleted(true);  // Redo delete = soft delete
+                question.setUpdatedAt(LocalDateTime.now());
+                questionRepository.save(question);
             }
         }
         return "Redo " + action.getType() + " successfully";
@@ -351,6 +366,5 @@ public class QuestionServiceImpl implements QuestionService {
         newVersion.setUpdatedBy(updatedBy);
         newVersion.setCreatedAt(LocalDateTime.now());
         versionRepository.save(newVersion);
-        question.getVersions().add(newVersion);
     }
 }

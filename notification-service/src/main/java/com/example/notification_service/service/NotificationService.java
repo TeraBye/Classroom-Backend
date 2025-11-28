@@ -11,4 +11,5 @@ import java.util.concurrent.ExecutionException;
 public interface NotificationService {
     WriteResult saveNotification(NotificationRequest request) throws ExecutionException, InterruptedException;
     List<NotificationResponse> getNotificationsByUsername(String username) throws ExecutionException, InterruptedException;
+    void markAllAsRead(String username);
 }

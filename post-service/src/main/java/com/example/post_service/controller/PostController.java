@@ -7,6 +7,7 @@ import com.example.post_service.dto.response.PostResponse;
 import com.example.post_service.dto.response.UserPostResponse;
 import com.example.post_service.entity.Post;
 import com.example.post_service.service.PostService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +22,7 @@ public class PostController {
     PostService postService;
 
     @PostMapping("/createPost")
-    public ApiResponse<UserPostResponse> createPost(@RequestBody PostCreationRequest request) {
+    public ApiResponse<UserPostResponse> createPost(@RequestBody PostCreationRequest request) throws JsonProcessingException {
         return ApiResponse.<UserPostResponse>builder()
                 .result(postService.createPost(request))
                 .build();

@@ -13,4 +13,5 @@ public interface ClassroomDetailService {
     void deleteStudent(StudentRemoveRequest request);
     Page<UserProfileResponse> getStudentsOfClass(int classroomId, int page, int size);
     List<String> findStudentUsernamesByClassroomId(int classroomId);
+
 }

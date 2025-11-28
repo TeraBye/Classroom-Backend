@@ -1,6 +1,5 @@
 package com.example.post_service.service.impl;
 
-import com.example.post_service.dto.request.AssignmentCreateRequest;
 import com.example.post_service.dto.request.ListIdRequest;
 import com.example.post_service.dto.request.PostCreationRequest;
 import com.example.post_service.dto.response.*;
@@ -11,6 +10,7 @@ import com.example.post_service.repository.PostRepository;
 import com.example.post_service.repository.httpClient.AssignmentClient;
 import com.example.post_service.repository.httpClient.ProfileClient;
 import com.example.post_service.service.PostService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,10 +21,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @Service
@@ -40,7 +37,7 @@ public class PostServiceImpl implements PostService {
     KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
-    public UserPostResponse createPost(PostCreationRequest request) {
+    public UserPostResponse createPost(PostCreationRequest request) throws JsonProcessingException {
         AssignmentResponse assignmentResponse = assignmentClient.createAssignment(
                 postMapper.toAssignmentCreateRequest(request)
         ).getResult();
@@ -66,6 +63,16 @@ public class PostServiceImpl implements PostService {
                 "/topic/posts/" + request.getClassId(),
                 response
         );
+
+        Map<String, Object> message = new HashMap<>();
+        message.put("type", "post");
+        message.put("content", userProfileResponse.getFullName() + " has just created a new post: " + request.getTitle());
+        message.put("senderUsername", request.getUsername());
+        message.put("classroomId", request.getClassId().toString());
+        message.put("avatar", userProfileResponse.getAvatar());
+        message.put("isRead", false);
+        kafkaTemplate.send("notifications", message);
+
         AuditLogEvent logEvent = new AuditLogEvent(
                 request.getUsername(),
                 "TEACHER",

@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class QuestionAction {
     ActionType type;
-    Question before;
-    Question after;
+    Integer questionId;
+    Integer fromVersion;
+    Integer toVersion;
 }

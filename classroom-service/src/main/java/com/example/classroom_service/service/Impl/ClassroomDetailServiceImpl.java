@@ -7,12 +7,16 @@ import com.example.classroom_service.dto.response.StudentResponse;
 import com.example.classroom_service.dto.response.UserProfileResponse;
 import com.example.classroom_service.entity.Classroom;
 import com.example.classroom_service.entity.ClassroomDetail;
+import com.example.classroom_service.entity.JoinRequest;
+import com.example.classroom_service.enums.JoinStatus;
 import com.example.classroom_service.mapper.ClassroomDetailMapper;
 import com.example.classroom_service.mapper.ClassroomMapper;
 import com.example.classroom_service.repository.ClassroomDetailRepository;
 import com.example.classroom_service.repository.ClassroomRepository;
+import com.example.classroom_service.repository.JoinRequestRepository;
 import com.example.classroom_service.repository.httpclient.ProfileClient;
 import com.example.classroom_service.service.ClassroomDetailService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,11 +24,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +39,9 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
     ClassroomDetailMapper classroomDetailMapper;
     ProfileClient profileClient;
     ClassroomMapper classroomMapper;
+    JoinRequestRepository joinRequestRepository;
+    KafkaTemplate<String, Object> kafkaTemplate;
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public StudentResponse addStudent(StudentAddRequest request) {
@@ -48,13 +55,41 @@ public class ClassroomDetailServiceImpl implements ClassroomDetailService {
             throw new RuntimeException("Student with username " + request.getStudentUsername() + " is already enrolled in the classroom.");
         }
 
-        ClassroomDetail classroomDetail = ClassroomDetail.builder()
-                .classroom(classroom)
-                .studentUsername(request.getStudentUsername())
-                .joinedAt(LocalDateTime.now())
-                .build();
+        if (classroom.getIsPublic()) {
+            ClassroomDetail classroomDetail = ClassroomDetail.builder()
+                    .classroom(classroom)
+                    .studentUsername(request.getStudentUsername())
+                    .joinedAt(LocalDateTime.now())
+                    .build();
+            return classroomDetailMapper.toStudentResponse(classroomDetailRepository.save(classroomDetail));
+        } else {
+            Optional<JoinRequest> existingRequest = joinRequestRepository.findByClassroom_IdAndStudentUsername(classroom.getId(), request.getStudentUsername());
+            if (existingRequest.isPresent() && JoinStatus.PENDING.name().equals(existingRequest.get().getStatus())) {
+                throw new RuntimeException("You have already sent a join request for this classroom.");
+            }
 
-        return classroomDetailMapper.toStudentResponse(classroomDetailRepository.save(classroomDetail));
+            JoinRequest joinRequest = JoinRequest.builder()
+                    .classroom(classroom)
+                    .studentUsername(request.getStudentUsername())
+                    .teacherUsername(classroom.getTeacherSubject().getTeacherUsername())
+                    .status(JoinStatus.PENDING.name())
+                    .requestedAt(LocalDateTime.now())
+                    .build();
+            joinRequestRepository.save(joinRequest);
+
+            Map<String, Object> notiPayload = new HashMap<>();
+            notiPayload.put("type", "join_request");
+            notiPayload.put("content", request.getStudentUsername() + " requested to join: " + classroom.getName());
+            notiPayload.put("senderUsername", request.getStudentUsername());
+            notiPayload.put("receiverUsername", classroom.getTeacherSubject().getTeacherUsername());
+            notiPayload.put("classroomId", classroom.getId().toString());
+            notiPayload.put("requestId", joinRequest.getId().toString());
+
+            kafkaTemplate.send("notifications", notiPayload);
+
+            throw new RuntimeException("Join request sent successfully. Waiting for teacher approval.");
+        }
+
     }
 
     @Override
