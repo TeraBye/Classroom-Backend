@@ -48,11 +48,14 @@ public class Question {
 
     private Integer subjectId;
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "question", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     @JsonManagedReference
     @Builder.Default
     private List<QuestionVersion> versions = new ArrayList<>();
 
     private boolean locked = false;
+
+    @Column(name = "deleted")
+    private boolean deleted = false;
 
 }

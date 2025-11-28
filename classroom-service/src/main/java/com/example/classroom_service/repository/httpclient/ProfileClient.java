@@ -15,6 +15,6 @@ import java.util.List;
 public interface ProfileClient {
     @GetMapping(value = "/users/getListUserByListUsername", produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<List<UserProfileResponse>> getListUserByListUsername(@RequestBody ListUsernameRequest usernames);
-    @GetMapping(value = "/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/users/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<UserProfileResponse> getUserProfileByUsername(@PathVariable String username);
 }

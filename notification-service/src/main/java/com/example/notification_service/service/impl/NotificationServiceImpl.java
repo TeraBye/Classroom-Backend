@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,6 +57,8 @@ public class NotificationServiceImpl implements NotificationService {
 
         for (QueryDocumentSnapshot document : querySnapshot) {
             Notification notification = document.toObject(Notification.class);
+            Boolean isRead = document.getBoolean("isRead");
+            notification.setIsRead(isRead != null && isRead);
             notifications.add(notification);
         }
 
@@ -84,9 +87,30 @@ public class NotificationServiceImpl implements NotificationService {
                             .content(notification.getContent())
                             .timestamp(notification.getTimestamp())
                             .senderUsername(notification.getSenderUsername())
+                            .isRead(notification.getIsRead())
                             .avatar(profile.getAvatar())
                             .build();
                 }).collect(Collectors.toList());
         return notificationResponses;
+    }
+
+    @Override
+    public void markAllAsRead(String username) {
+        Query query = firestore.collection("notification")
+                .whereEqualTo("receiverUsername", username)
+                .whereEqualTo("isRead", false);
+
+        query.get().addListener(() -> {
+            try {
+                QuerySnapshot snapshot = query.get().get();
+                WriteBatch batch = firestore.batch();
+                for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                    batch.update(doc.getReference(), "isRead", true);
+                }
+                batch.commit().get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, Executors.newSingleThreadExecutor());
     }
 }

@@ -4,7 +4,6 @@ import com.example.question_service.entity.Question;
 import com.example.question_service.enums.Level;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +11,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface QuestionRepository extends JpaRepository<Question, Integer> {
-    boolean existsByContentIgnoreCase(String content);
     List<Question> findBySubjectId(int subjectId);
 
     //Luan lam
@@ -38,7 +36,8 @@ public interface QuestionRepository extends JpaRepository<Question, Integer> {
     int countBySubjectId(Integer subjectId);
 
     @Query("SELECT q FROM Question q " +
-            "WHERE (:subjectId IS NULL OR q.subjectId = :subjectId) " +
+            "WHERE q.deleted = false " +
+            "AND (:subjectId IS NULL OR q.subjectId = :subjectId) " +
             "AND (:level IS NULL OR q.level = :level) " +
             "AND (:keyword IS NULL OR " +
             "q.content LIKE CONCAT('%', :keyword, '%') OR " +

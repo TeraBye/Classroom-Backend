@@ -29,4 +29,18 @@ public interface QuestionMapper {
 
     @Mapping(target = "id", ignore = true)
     void updateQuestion(Question src, @MappingTarget Question target);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "versions", ignore = true)
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "locked", constant = "false")
+    Question toRestoredQuestion(Question question);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "versions", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "locked", ignore = true)
+    void updateFromVersion(QuestionVersion source, @MappingTarget Question target);
 }
