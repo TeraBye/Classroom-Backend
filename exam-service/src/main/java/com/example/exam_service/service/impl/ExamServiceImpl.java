@@ -43,7 +43,7 @@ public class ExamServiceImpl implements ExamService {
             Exam exam = examMapper.toExam(request);
             List<QuestionResponse> questions =
                     questionClient.getRandomQuestions(
-                            exam.getSubjectId(), exam.getNumberOfQuestion()
+                            exam.getSubjectId(), exam.getNumberOfQuestion(), 0.2, 0.5, 0.3
                     ).getResult();
 
             exam = examRepository.save(exam);

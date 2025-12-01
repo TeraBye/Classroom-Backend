@@ -22,7 +22,7 @@ public interface QuestionService {
     String redo(String username);
     //Luan lam
     List<QuestionResponse> getQuestionsBySubjectId(int subjectId);
-    List<QuestionResponse> getRandomQuestionsBySubject(Integer subjectId, int n) throws IllegalStateException;
+    List<QuestionResponse> getRandomQuestionsBySubject(Integer subjectId, int n, double hardRatio, double mediumRatio, double easyRatio) throws IllegalStateException;
     List<QuestionResponse> getQuestionByIds(QuestionIdsRequest request);
 
     QuestionPagingResponse<QuestionResponse> getPageQuestion(Integer subjectId, int cursor, Pageable pageable);
@@ -31,4 +31,5 @@ public interface QuestionService {
 
     void deleteQuestionById(int questionId);
     public QuestionPagingResponse<QuestionResponse> getPageQuestion(Integer subjectId, QuestionSearchRequest request, Pageable pageable);
+    List<QuestionResponse> getQuestionsByIds(List<Integer> questionIds);
 }
