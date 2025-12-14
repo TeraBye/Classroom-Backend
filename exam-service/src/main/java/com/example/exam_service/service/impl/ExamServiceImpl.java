@@ -1,8 +1,10 @@
 package com.example.exam_service.service.impl;
 
 import com.example.exam_service.dto.request.ExamCreationRequest;
+import com.example.exam_service.dto.request.PracticeExamCreationRequest;
 import com.example.exam_service.dto.response.ExamResponse;
 import com.example.exam_service.dto.response.ExamViewResponse;
+import com.example.exam_service.dto.response.ProficiencyPredictionResponse;
 import com.example.exam_service.dto.response.QuestionInUnstartedExamCheck;
 import com.example.exam_service.dto.response.QuestionResponse;
 import com.example.exam_service.entity.Exam;
@@ -13,6 +15,7 @@ import com.example.exam_service.repository.ExamQuestionRepository;
 import com.example.exam_service.repository.ExamRepository;
 import com.example.exam_service.repository.httpClient.QuestionClient;
 import com.example.exam_service.service.ExamService;
+import com.example.exam_service.service.PredictService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,9 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +37,7 @@ public class ExamServiceImpl implements ExamService {
     ExamMapper examMapper;
     QuestionClient questionClient;
     KafkaTemplate<String, Object> kafkaTemplate;
+    PredictService predictService;
 
     @Override
     public ExamViewResponse createExam(ExamCreationRequest request) {
@@ -69,6 +71,59 @@ public class ExamServiceImpl implements ExamService {
         }
     }
 
+    @Override
+    public ExamViewResponse createPracticeExam(PracticeExamCreationRequest request) {
+        try {
+            // Lấy dự đoán năng lực từ ML API
+            ProficiencyPredictionResponse prediction = predictService.getProficiencyPrediction(request.getStudent());
+
+            // Normalize ratios để tổng = 1.0 (tránh lỗi rounding)
+            double totalRatio = prediction.getEasyRatio() + prediction.getMediumRatio() + prediction.getHardRatio();
+            double easyRatio = prediction.getEasyRatio() / totalRatio;
+            double mediumRatio = prediction.getMediumRatio() / totalRatio;
+            double hardRatio = prediction.getHardRatio() / totalRatio;
+
+            log.info("Creating practice exam for student: {} with ratios - Easy: {}, Medium: {}, Hard: {}",
+                    request.getStudent(), easyRatio, mediumRatio, hardRatio);
+
+            // Tạo exam entity từ request
+            Exam exam = examMapper.toExamFromPracticeRequest(request);
+
+            // Lấy câu hỏi dựa trên tỉ lệ dự đoán (đã normalize)
+            List<QuestionResponse> questions = questionClient.getRandomQuestions(
+                    exam.getSubjectId(),
+                    exam.getNumberOfQuestion(),
+                    hardRatio,
+                    mediumRatio,
+                    easyRatio
+            ).getResult();
+
+            // Lưu exam
+            exam = examRepository.save(exam);
+
+            // Tạo exam questions
+            createExamQuestions(exam, questions);
+
+            // Gửi audit log
+            AuditLogEvent logEvent = new AuditLogEvent(
+                    request.getStudent(),
+                    "STUDENT",
+                    "CREATE PRACTICE EXAM",
+                    String.format("Created practice exam with ID: %d (Easy: %.2f, Medium: %.2f, Hard: %.2f)",
+                            exam.getId(), easyRatio, mediumRatio, hardRatio)
+            );
+            kafkaTemplate.send("audit.log", logEvent);
+
+            return ExamViewResponse.builder()
+                    .exam(exam)
+                    .questions(questions)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Lỗi khi tạo bài thi luyện tập cho học sinh {}: {}", request.getStudent(), e.getMessage(), e);
+            throw new RuntimeException("Không thể tạo bài thi luyện tập, vui lòng thử lại sau.");
+        }
+    }
 
     @Override
     public void createExamQuestions(Exam exam, List<QuestionResponse> questionList) {
@@ -90,6 +145,12 @@ public class ExamServiceImpl implements ExamService {
     @Override
     public List<ExamResponse> getExamsByClass(int classId) {
         List<Exam> exams = examRepository.findExamByClassId(classId);
+        return examMapper.toExamResponseList(exams);
+    }
+
+    @Override
+    public List<ExamResponse> getExamsByStudent(String student) {
+        List<Exam> exams = examRepository.findExamByTeacher(student);
         return examMapper.toExamResponseList(exams);
     }
 

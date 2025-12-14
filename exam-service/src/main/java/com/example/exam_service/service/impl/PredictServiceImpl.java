@@ -1,10 +1,13 @@
 package com.example.exam_service.service.impl;
 
+import com.example.exam_service.dto.request.PredictRequest;
 import com.example.exam_service.dto.response.ExamSubmissionResponse;
+import com.example.exam_service.dto.response.ProficiencyPredictionResponse;
 import com.example.exam_service.dto.response.QuestionResponse;
 import com.example.exam_service.dto.request.QuestionIdsRequest;
 import com.example.exam_service.entity.ExamSubmissionAnswer;
 import com.example.exam_service.repository.ExamAnswerRepository;
+import com.example.exam_service.repository.httpClient.PredictClient;
 import com.example.exam_service.repository.httpClient.QuestionClient;
 import com.example.exam_service.service.ExamSubmissionService;
 import com.example.exam_service.service.PredictService;
@@ -30,6 +33,7 @@ public class PredictServiceImpl implements PredictService {
     ExamSubmissionService examSubmissionService;
     ExamAnswerRepository examAnswerRepository;
     QuestionClient questionClient;
+    PredictClient predictClient;
 
     public Double getAvgRecentScores(String student) {
         List<ExamSubmissionResponse> examSubmissionResponseList = examSubmissionService.getRecentExamSubmissionsByStudentId(student);
@@ -221,5 +225,36 @@ public class PredictServiceImpl implements PredictService {
                 .consistency(getConsistency(student).floatValue())
                 .recentStreak(getRecentStreak(student))
                 .build();
+    }
+
+    @Override
+    public PredictRequest getPredictRequestPayload(String student) {
+        return PredictRequest.builder()
+                .avgRecentScore(getAvgRecentScores(student))
+                .hardCorrectRatio(getHardCorrectRatio(student))
+                .mediumCorrectRatio(getMediumCorrectRatio(student))
+                .easyCorrectRatio(getEasyCorrectRatio(student))
+                .hardQuestionsAttempted(getHardQuestionsAttempted(student))
+                .examTrend(getExamTrend(student))
+                .avgTimePerQuestion(getAvgTimePerQuestion(student))
+                .consistency(getConsistency(student))
+                .recentStreak(getRecentStreak(student))
+                .build();
+    }
+
+    @Override
+    public ProficiencyPredictionResponse getProficiencyPrediction(String student) {
+        try {
+            PredictRequest request = getPredictRequestPayload(student);
+            log.info("Calling ML Predict API with payload: {}", request);
+
+            ProficiencyPredictionResponse response = predictClient.predict(request);
+            log.info("ML Predict API response: {}", response);
+
+            return response;
+        } catch (Exception e) {
+            log.error("Error calling ML Predict API for student {}: {}", student, e.getMessage(), e);
+            throw new RuntimeException("Không thể dự đoán năng lực học sinh, vui lòng thử lại sau.");
+        }
     }
 }
