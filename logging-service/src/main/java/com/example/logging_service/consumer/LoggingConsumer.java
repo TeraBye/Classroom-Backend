@@ -12,6 +12,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -32,8 +33,8 @@ public class LoggingConsumer {
                 .role(event.getRole())
                 .action(event.getAction())
                 .description(event.getDescription())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
         auditLogRepository.save(log);  // Giả sử có AuditLogRepository
     }
