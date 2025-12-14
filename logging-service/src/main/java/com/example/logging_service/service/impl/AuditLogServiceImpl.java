@@ -1,5 +1,6 @@
 package com.example.logging_service.service.impl;
 
+import com.example.logging_service.dto.request.SearchAuditLogRequest;
 import com.example.logging_service.dto.response.AuditLogResponse;
 import com.example.logging_service.entity.AuditLog;
 import com.example.logging_service.mapper.AuditLogMapper;
@@ -19,8 +20,10 @@ public class AuditLogServiceImpl implements AuditLogService {
     AuditLogRepository auditLogRepository;
     AuditLogMapper logMapper;
 
+
     @Override
-    public Page<AuditLogResponse> getAuditLogs(Pageable pageable) {
-        return auditLogRepository.findAll(pageable).map(logMapper::toResponse);
+    public Page<AuditLogResponse> getAuditLogs(SearchAuditLogRequest request, Pageable pageable) {
+        return auditLogRepository.findByUsername(request.getUsername(), pageable)
+                .map(logMapper::toResponse);
     }
 }

@@ -1,5 +1,7 @@
 package com.example.logging_service.controller;
 
+import com.example.logging_service.dto.request.SearchAuditLogRequest;
+import com.example.logging_service.dto.response.ApiResponse;
 import com.example.logging_service.dto.response.AuditLogResponse;
 import com.example.logging_service.service.AuditLogService;
 import lombok.AccessLevel;
@@ -18,7 +20,9 @@ public class AuditLogController {
     AuditLogService auditLogService;
 
     @GetMapping
-    public Page<AuditLogResponse> getAuditLogs(Pageable pageable) {
-        return auditLogService.getAuditLogs(pageable);
+    public ApiResponse<Page<AuditLogResponse>> getAuditLogs(SearchAuditLogRequest request, Pageable pageable) {
+        return ApiResponse.<Page<AuditLogResponse>>builder()
+                .result(auditLogService.getAuditLogs(request, pageable))
+                .build();
     }
 }
