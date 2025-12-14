@@ -92,9 +92,9 @@ public class QuestionController {
     //Luan lam
     @GetMapping("/random")
     public ApiResponse<List<QuestionResponse>> getRandomQuestions(
-            @RequestParam Integer subjectId, @RequestParam Integer n) {
+            @RequestParam Integer subjectId, @RequestParam Integer n, @RequestParam Float hardRatio, @RequestParam Float mediumRatio, @RequestParam Float easyRatio) {
         return ApiResponse.<List<QuestionResponse>>builder()
-                .result(questionService.getRandomQuestionsBySubject(subjectId,n))
+                .result(questionService.getRandomQuestionsBySubject(subjectId,n,hardRatio,mediumRatio,easyRatio))
                 .build();
 
     }

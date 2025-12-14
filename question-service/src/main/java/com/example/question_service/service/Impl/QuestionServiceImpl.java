@@ -301,39 +301,52 @@ public class QuestionServiceImpl implements QuestionService {
 
     //Luan lam
     @Override
-    public List<QuestionResponse> getRandomQuestionsBySubject(Integer subjectId, int n) throws IllegalStateException {
-        // Tính số lượng câu hỏi HARD và EASY
-        int minHard = (int) Math.ceil(n * 0.2); // Ít nhất 20% là HARD
-        int maxEasy = (int) Math.floor(n * 0.3); // Nhiều nhất 30% là EASY
-        int remaining = n - minHard; // Số câu hỏi còn lại (EASY + MEDIUM)
-        int maxMedium = remaining - maxEasy; // Số câu MEDIUM tối đa
+    public List<QuestionResponse> getRandomQuestionsBySubject(
+            Integer subjectId,
+            int n,
+            double hardRatio,
+            double mediumRatio,
+            double easyRatio
+    ) throws IllegalStateException {
 
-        // Kiểm tra số lượng câu hỏi có sẵn trong cơ sở dữ liệu
+        // Validate tổng 3 tỷ lệ = 1
+        if (Math.abs((hardRatio + mediumRatio + easyRatio) - 1.0f) > 0.0001) {
+            throw new IllegalArgumentException("Tổng hardRatio + mediumRatio + easyRatio phải bằng 1");
+        }
+
+        int minHard = (int) Math.ceil(n * hardRatio);
+        int maxEasy = (int) Math.floor(n * easyRatio);
+
+        int remaining = n - minHard;
+        int maxMedium = remaining - maxEasy;
+
         long availableHard = questionRepository.countBySubjectIdAndLevel(subjectId, Level.HARD);
         long availableEasy = questionRepository.countBySubjectIdAndLevel(subjectId, Level.EASY);
         long availableMedium = questionRepository.countBySubjectIdAndLevel(subjectId, Level.MEDIUM);
 
-        // Kiểm tra điều kiện
         if (availableHard < minHard) {
-            throw new IllegalStateException("Không đủ câu hỏi HARD: Cần ít nhất " + minHard + ", chỉ có " + availableHard);
+            throw new IllegalStateException("Không đủ câu HARD: cần " + minHard + ", có " + availableHard);
         }
-        if (availableEasy < 1 && maxEasy > 0) { // Nếu maxEasy > 0 nhưng không có EASY
-            throw new IllegalStateException("Không đủ câu hỏi EASY: Cần ít nhất 1, chỉ có " + availableEasy);
-        }
-        if (availableMedium < (n - minHard - Math.min(availableEasy, maxEasy))) {
-            throw new IllegalStateException("Không đủ câu hỏi MEDIUM: Cần ít nhất " + (n - minHard - Math.min(availableEasy, maxEasy)) + ", chỉ có " + availableMedium);
+        if (availableEasy < 1 && maxEasy > 0) {
+            throw new IllegalStateException("Không đủ câu EASY: cần ≥1, có " + availableEasy);
         }
 
-        // Lấy số câu EASY (tối đa maxEasy, nhưng không vượt quá availableEasy)
         int easyCount = Math.min(maxEasy, (int) availableEasy);
-        int mediumCount = n - minHard - easyCount; // Số câu MEDIUM cần lấy
+        int mediumCount = n - minHard - easyCount;
 
-        // Lấy câu hỏi ngẫu nhiên
+        if (availableMedium < mediumCount) {
+            throw new IllegalStateException(
+                    "Không đủ câu MEDIUM: cần " + mediumCount + ", có " + availableMedium
+            );
+        }
+
         List<Question> questions = new ArrayList<>();
         questions.addAll(questionRepository.findRandomBySubjectIdAndLevel(subjectId, Level.HARD, PageRequest.of(0, minHard)));
+
         if (easyCount > 0) {
             questions.addAll(questionRepository.findRandomBySubjectIdAndLevel(subjectId, Level.EASY, PageRequest.of(0, easyCount)));
         }
+
         if (mediumCount > 0) {
             questions.addAll(questionRepository.findRandomBySubjectIdAndLevel(subjectId, Level.MEDIUM, PageRequest.of(0, mediumCount)));
         }
@@ -366,5 +379,11 @@ public class QuestionServiceImpl implements QuestionService {
         newVersion.setUpdatedBy(updatedBy);
         newVersion.setCreatedAt(LocalDateTime.now());
         versionRepository.save(newVersion);
+    }
+
+    @Override
+    public List<QuestionResponse> getQuestionsByIds(List<Integer> questionIds) {
+        List<Question> questions = questionRepository.findAllById(questionIds);
+        return questionMapper.toQuestionResponses(questions);
     }
 }

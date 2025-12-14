@@ -2,9 +2,9 @@ package com.example.exam_service.controller;
 
 import com.example.exam_service.dto.request.ExamCreationRequest;
 import com.example.exam_service.dto.request.ExamSubmissionRequest;
+import com.example.exam_service.dto.request.PracticeExamCreationRequest;
 import com.example.exam_service.dto.request.UpdateAnswerRequest;
 import com.example.exam_service.dto.response.*;
-import com.example.exam_service.entity.ExamSubmission;
 import com.example.exam_service.service.ExamService;
 import com.example.exam_service.service.ExamSubmissionService;
 import lombok.AccessLevel;
@@ -25,6 +25,13 @@ public class ExamController {
     public ApiResponse<ExamViewResponse> createExam(@RequestBody ExamCreationRequest request){
         return ApiResponse.<ExamViewResponse>builder()
                 .result(examService.createExam(request))
+                .build();
+    }
+
+    @PostMapping("/createPracticeExam")
+    public ApiResponse<ExamViewResponse> createPracticeExam(@RequestBody PracticeExamCreationRequest request){
+        return ApiResponse.<ExamViewResponse>builder()
+                .result(examService.createPracticeExam(request))
                 .build();
     }
 
@@ -78,6 +85,15 @@ public class ExamController {
     ){
         return ApiResponse.<List<ExamResponse>>builder()
                 .result(examService.getExamsByClass(classId))
+                .build();
+    }
+
+    @GetMapping("/getExamsByStudent")
+    public ApiResponse<List<ExamResponse>> getExamsByStudent(
+            @RequestParam String student
+    ){
+        return ApiResponse.<List<ExamResponse>>builder()
+                .result(examService.getExamsByStudent(student))
                 .build();
     }
 

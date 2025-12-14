@@ -17,4 +17,5 @@ public interface ExamSubmissionService {
     List<ExamSubmissionResponse> getExamsByClass(Long classId);
     FinalStudentExamViewResponse getStudentAnswer(String student, Long examId);
     ProblemExamCheck isProblemExam(String student, Long examId);
+    List<ExamSubmissionResponse> getRecentExamSubmissionsByStudentId(String student);
 }

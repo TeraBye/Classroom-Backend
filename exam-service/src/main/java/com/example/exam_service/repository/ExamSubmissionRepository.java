@@ -10,4 +10,5 @@ import java.util.List;
 public interface ExamSubmissionRepository extends JpaRepository<ExamSubmission,Long> {
     ExamSubmission findByStudentAndExamId(String student, Long examId);
     List<ExamSubmission> findByExam_Id(Long examId);
+    List<ExamSubmission> findTop5ByStudentOrderBySubmittedAtDesc(String student);
 }

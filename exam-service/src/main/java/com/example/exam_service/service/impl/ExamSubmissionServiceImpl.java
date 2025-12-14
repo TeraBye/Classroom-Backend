@@ -290,6 +290,10 @@ public class ExamSubmissionServiceImpl implements ExamSubmissionService {
         return rounded.floatValue();
     }
 
-
-
+    @Override
+    public List<ExamSubmissionResponse> getRecentExamSubmissionsByStudentId(String student){
+        List<ExamSubmission> examSubmissions = examSubmissionRepository
+                .findTop5ByStudentOrderBySubmittedAtDesc(student);
+        return examSubmissionMapper.toExamSubmissionsResponse(examSubmissions);
+    }
 }

@@ -16,7 +16,7 @@ import java.util.List;
 public interface QuestionClient {
     @GetMapping(value = "/random", produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<List<QuestionResponse>> getRandomQuestions(
-            @RequestParam Integer subjectId, @RequestParam Integer n);
+            @RequestParam Integer subjectId, @RequestParam Integer n, @RequestParam Double hardRatio, @RequestParam Double mediumRatio, @RequestParam Double easyRatio);
 
     @PostMapping(value = "/getQuestions-by-ids", produces = MediaType.APPLICATION_JSON_VALUE)
     ApiResponse<List<QuestionResponse>> getQuestionsByIds(@RequestBody QuestionIdsRequest request);
