@@ -32,4 +32,7 @@ public class Assignment {
     @Column(name = "classroom_id")
     private Integer classroomId;
 
+    @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
+    private LocalDateTime startAt;
+
 }

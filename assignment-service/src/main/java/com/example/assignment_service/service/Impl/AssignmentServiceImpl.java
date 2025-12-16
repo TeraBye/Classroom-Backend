@@ -66,6 +66,7 @@ public class AssignmentServiceImpl implements AssignmentService {
         assignment.setName(request.getName());
         assignment.setUsername(request.getUsername());
         assignment.setClassroomId(request.getClassroomId());
+        assignment.setStartAt(request.getStartAt());
         assignment = assignmentRepository.save(assignment);
         AuditLogEvent logEvent = new AuditLogEvent(
                 request.getUsername(),

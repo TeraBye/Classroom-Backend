@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -26,4 +25,6 @@ public class AssignmentCreateRequest {
     String username;
     @NotNull(message = "Classroom ID is required")
     Integer classroomId;
+    @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
+    LocalDateTime startAt;
 }

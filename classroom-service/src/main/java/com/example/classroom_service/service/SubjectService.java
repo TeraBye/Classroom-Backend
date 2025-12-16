@@ -12,8 +12,8 @@ public interface SubjectService {
     SubjectResponse createSubject(SubjectCreateRequest request);
     SubjectResponse getSubjectById(int subjectId);
     Page<SubjectResponse> getSubjects(String username, Pageable pageable);
-    SubjectResponse updateSubject(int subjectId, SubjectUpdateRequest request);
+    SubjectResponse updateSubject(String code, SubjectUpdateRequest request);
     void deleteSubject(int subjectId);
 
-    List<SubjectResponse> getListSubjectsById(List<Integer> listSubjectId);
+//    List<SubjectResponse> getListSubjectsById(List<Integer> listSubjectId);
 }

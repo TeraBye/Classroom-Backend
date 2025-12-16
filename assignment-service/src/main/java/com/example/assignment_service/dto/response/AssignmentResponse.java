@@ -25,4 +25,7 @@ public class AssignmentResponse {
 
     String username;
     Integer classroomId;
+    @JsonFormat(pattern = "HH:mm:ss dd:MM:yyyy")
+    LocalDateTime startAt;
+
 }
