@@ -46,28 +46,28 @@ public class SubjectController {
                 .build();
     }
 
-    @PutMapping("/{subjectId}")
-    public ApiResponse<SubjectResponse> updateSubject(@PathVariable int subjectId, @RequestBody SubjectUpdateRequest request) {
+    @PutMapping("/{code}")
+    public ApiResponse<SubjectResponse> updateSubject(@PathVariable String code, @RequestBody SubjectUpdateRequest request) {
         return ApiResponse.<SubjectResponse>builder()
-                .result(subjectService.updateSubject(subjectId, request))
+                .result(subjectService.updateSubject(code, request))
                 .build();
     }
 
-    @DeleteMapping("/{subjectId}")
-    public ApiResponse<Void> deleteSubject(@PathVariable int subjectId) {
-        subjectService.deleteSubject(subjectId);
-        return ApiResponse.<Void>builder()
-                .message("Delete subject successfully")
-                .build();
-    }
+//    @DeleteMapping("/{subjectId}")
+//    public ApiResponse<Void> deleteSubject(@PathVariable int subjectId) {
+//        subjectService.deleteSubject(subjectId);
+//        return ApiResponse.<Void>builder()
+//                .message("Delete subject successfully")
+//                .build();
+//    }
 
-    @PostMapping("/get-list-subjects")
-    public ApiResponse<List<SubjectResponse>> getListSubject(
-            @RequestBody List<Integer> listSubjectId
-    ) {
-        return ApiResponse.<List<SubjectResponse>>builder()
-                .result(subjectService.getListSubjectsById(listSubjectId))
-                .build();
-    }
+//    @PostMapping("/get-list-subjects")
+//    public ApiResponse<List<SubjectResponse>> getListSubject(
+//            @RequestBody List<Integer> listSubjectId
+//    ) {
+//        return ApiResponse.<List<SubjectResponse>>builder()
+//                .result(subjectService.getListSubjectsById(listSubjectId))
+//                .build();
+//    }
 
 }

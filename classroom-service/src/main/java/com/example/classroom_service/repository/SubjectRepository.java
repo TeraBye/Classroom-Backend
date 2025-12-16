@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 public interface SubjectRepository extends JpaRepository<Subject, Integer> {
     @Query("""
             SELECT s FROM Subject s
@@ -14,4 +16,6 @@ public interface SubjectRepository extends JpaRepository<Subject, Integer> {
             ))
             """)
     Page<Subject> findByTeacher_Username(String username, Pageable pageable);
+
+    Optional<Subject> findByCode(String code);
 }

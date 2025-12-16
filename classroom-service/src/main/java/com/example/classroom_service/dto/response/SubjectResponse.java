@@ -12,4 +12,5 @@ import lombok.experimental.FieldDefaults;
 public class SubjectResponse {
      Integer id;
      String name;
+     String code;
 }

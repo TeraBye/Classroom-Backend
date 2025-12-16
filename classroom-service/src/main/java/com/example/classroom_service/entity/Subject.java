@@ -17,5 +17,8 @@ public class Subject {
 
     @Column(name = "name", unique = true)
     private String name;
+    
+    @Column(name = "code", unique = true)
+    private String code;
 
 }

@@ -10,6 +10,5 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubjectUpdateRequest {
-    String code;
     String name;
 }
